@@ -41,7 +41,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class QijTextile
 {
   public:
-  QijTextile( QString & );
+  QijTextile( QString &, QString _rel = "" );
+  QString convert( bool encode = false );
   QString toString();
 
   // Set the bools which were set in textileThis; by default, all are false
@@ -49,6 +50,8 @@ class QijTextile
   void setNoImage( bool n )    { noImage = n; }
   void setStrict( bool s )     { strict = s; }
   void setLite( bool l )       { lite = l; }
+  void setRel( QString _rel )  { rel = _rel; }
+  void setText( QString t )    { sourceText = t; }
   
   static QString textileThis( QString & );
   static QString substitute( QString &, QRegExp &, QString & );
@@ -64,3 +67,7 @@ class QijTextile
   QStringList urlSchemes, btag;
   QHash<QString, QString> glyph;
 
+  QString parseBlockAttributes( QString &, QString element = "" );
+  QString vAlign( QString & );
+  QString incomingEntities( QString & );
+};

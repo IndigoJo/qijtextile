@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "QijTextile.h"
 
-QijTextile::QijTextile()
+QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
 {
   hlgn.setPattern( "(?:\<(?!>)|(?<!<)\>|\<\>|\=|[()]+(?! ))" );
   vlgn.setPattern( "[\-^~]" );
@@ -66,4 +66,138 @@ QijTextile::QijTextile()
   lite = false;
   strict = false;
   noImage = false;
+
+  sourceText = _sourceText;
+  rel = _rel;
+}
+
+QString QijTextile::convert()
+{
+  if( encode ) {
+    sourceText = incomingEntities( sourceText );
+    sourceText.replace( "x%x%", "&#38;" );
+    return sourceText;
+  }
+  else {
+    if( !strict )
+      sourceText = cleanWhiteSpace( sourceText );
+    
+    getRefs( sourceText );
+    
+    if( !lite )
+      sourceText = block( sourceText );
+
+    sourceText = retrieve( sourceText );
+    
+    sourceText.replace( QRegExp( "<br />(?!\n)" ), "<br />\n" );
+
+    return sourceText;
+  }
+}
+
+QString QijTextile::parseBlockAttributes( QString &in, QString element )
+{
+  QString style, klass, lang, colspan, rowspan, id, atts;
+  QString matched, rv;
+  QRegExp rx;
+  
+  if( !in.isEmpty() ) {
+    matched = in;
+    if( element == "td" ) {
+      rx.setPattern( "\\\\{2}(\d+)" );
+      if( rx.indexIn( matched ) != -1 )
+        colspan = rx.cap( 1 );
+      rx.setPattern( "/(\\d+)" );
+      if( rx.indexIn( matched ) != -1 )
+        rowspan = rx.cap( 1 );
+    }
+
+    if( element == "td" || element == "tr" ) {
+      rx.setPattern( QString( "(%1)" ).arg( vlgn ) );
+      if( rx.indexIn( matched ) != -1 )
+        style += QString( "vertical-align: %1;" ).arg( vAlign( rx.cap( 1 ) ) );
+    }
+
+    rx.setPattern( "\\{([^}]*)\\}" );
+    if( rx.indexIn( matched ) != -1 ) {
+      style += rv.cap( 1 ).remove( QRegExp( ";$" ) ).append( ";" );
+      matched.remove( rv.cap( 0 ) );
+    }
+
+    rx.setPattern( "\\[([^]]+)\\]" );
+    rx.setMinimal( true );
+    if( rx.indexIn( matched ) != -1 ) {
+      lang = rx.cap( 1 );
+      matched.remove( rx.cap( 0 ) );
+    }
+
+    rx.setPattern( "\\(([^()]+)\\)" );
+    if( rx.indexIn( matched ) != -1 ) {
+      klass = rx.cap( 1 );
+      matched.remove( rx.cap( 0 ) );
+    }
+
+    rx.setPattern( "([(]+)" );
+    rx.setMinimal( false );
+    if( rx.indexIn( matched ) != -1 ) {
+      style += QString( "padding-left: %1em;" ).arg( rx.cap( 1 ).length() );
+      matched.remove( rx.cap( 0 ) );
+    }
+
+    rx.setPattern( "([)]+)" );
+    if( rx.indexIn( matched ) != -1 ) {
+      style += QString( "padding-right: %1em;" ).arg( rx.cap( 1 ).length() );
+      matched.remove( rx.cap( 0 ) );
+    }
+
+    rx.setPattern( QString( "(%1)" ).arg( hlgn ) );
+    if( rx.indexIn( matched ) != -1 )
+      style += QString( "text-align: %1;" ).arg( hAlign( rx.cap( 1 ) ) );
+      
+    rx.setPattern( "^(.*)#(.*)$" );
+    if( rx.indexIn( klass ) != -1 ) {
+      id = rx.cap( 2 );
+      klass = rx.cap( 1 );
+    }
+    
+    if( restricted )
+      return ( lang.isEmpty() ? "" :
+                 QString( " lang=\"%1\"" ).arg( lang ) );
+
+    if( !style.isEmpty() )
+      rv += QString( " style=\"%1\"" ).arg( style );
+    if( !klass.isEmpty() )
+      rv += QString( " class=\"%1\"" ).arg( klass );
+    if( !lang.isEmpty() )
+      rv += QString( " lang=\"%1\"" ).arg( lang );
+    if( !id.isEmpty() )
+      rv += QString( " id=\"%1\"" ).arg( id );
+    if( !colspan.isEmpty() )
+      rv += QString( " colspan=\"%1\"" ).arg( colspan );
+    if( !rowspan.isEmpty() )
+      rv += QString( " rowspan=\"%1\"" ).arg( rowspan );
+    
+    return rv;
+  }
+   
+  return QString( "" );
+} 
+
+QString QijTextile::vAlign( QString in )
+{
+  QMap<QString, QString> vals;
+
+  vals["^"] = "top";
+  vals["-"] = "middle";
+  vals["~"] = "bottom";
+
+  if( vals.contains( in ) )
+    return vals[in];
+  else
+    return "";
+}
+
+QString QijTextile::incomingEntities( QString in )
+{
+  return in.replace( QRegExp( "&(?![#a-zA-Z0-9]+;)" ) );
 }
