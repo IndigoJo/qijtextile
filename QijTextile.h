@@ -68,6 +68,7 @@ class QijTextile
   QHash<QString, QString> glyph;
 
   QString parseBlockAttributes( QString &, QString element = "" );
+  bool hasRawText( QString & );
   QString iAlign( QString & );
   QString hAlign( QString & );
   QString vAlign( QString & );

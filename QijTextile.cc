@@ -220,6 +220,17 @@ QString QijTextile::vAlign( QString &in )
     vals[in] : "";
 }
 
+bool QijTextile::hasRawText( QString &in )
+{
+  // Checks whether text is not already enclosed with a block tag
+  QString s = in.trimmed();
+  QString r = s.remove( QRegExp( "<(p|blockquote|div|form|table|ul|ol|pre|h\\d)[^>]*?>.*</\\1>" ) ).trimmed();
+  r.remove( QRegExp( "<(hr|br)[^>]*?/>" ) );
+  r = r.trimmed();
+
+  return !r.isEmpty();
+}
+                                 
 QString QijTextile::relURL( QString &u )
 {
   QUrl url( u );
