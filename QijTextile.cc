@@ -379,6 +379,32 @@ void fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
 
   content = graf( ctt );
 }
+
+QString QijTextile::graf( QString &in )
+{
+  QString text( in );
+
+  // Handle normal paragraph text
+  if( lite ) {
+    text = noTextile( text );
+    text = code( text );
+  }
+
+  text = links( text );
+  if( noImage )
+    text = image( text );
+  
+  if( lite ) {
+    text = lists( text );
+    text = table( text );
+  }
+
+  text = span( text );
+  text = footnoteRef( text );
+  text = glyphs( text );
+  
+  return text.remove( QRegExp( "\\n*$" ) );
+}
                                  
 QString QijTextile::getRefs( QString &in )
 {

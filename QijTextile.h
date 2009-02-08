@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 class QijTextile
 {
-  public:
+ public:
   QijTextile( QString &, QString _rel = "" );
   QString convert( bool encode = false );
   QString toString();
@@ -58,7 +58,7 @@ class QijTextile
   static QString substitute( QString &a, QString &b, QString &c ) {
     return substitute( a, QRegExp( b ), c ); }
 
-  private:
+ private:
   bool restricted, noImage, strict, lite;
   QRegExp hlgn, vlgn, clas, lnge, styl, cspn, rspn;
   QRegExp a, s, c;
