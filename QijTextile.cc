@@ -74,6 +74,7 @@ QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
 QString QijTextile::convert()
 {
   if( encode ) {
+    sourceText.replace( QRegExp( "&(?![#a-z0-9]+;)", Qt::CaseInsensitive ), "&#38;" );
     sourceText = incomingEntities( sourceText );
     sourceText.replace( "x%x%", "&#38;" );
     return sourceText;
@@ -230,7 +231,98 @@ bool QijTextile::hasRawText( QString &in )
 
   return !r.isEmpty();
 }
+
+QString QijTextile::block( QString &in )
+{
+  QString tre( btag.join( "|" ) );
+  QStringList ourList( in.split( "\n\n" ) );
+  QStringList out;
+  QString tag( "p" );
+  QString atts, cite, graf, ext;
+  QString o1, o2, content, c2, c1;
+  int anon, pos;
+  
+  QRegExp rx;
+  rx.setPattern( QString( "^(%1)(%2%3)\\.(\\.?)(?::(\\S+))? (.*)$" )
+                 .arg( tre ).arg( a ).arg( c ) );
+  
+  QStringList::iterator i;
+  for( i = ourList.begin(); i != ourList.end(); ++i ) {
+    anon = 0;
+
+    if( rx.indexIn( *i ) != -1 ) {
+      if( !ext.isEmpty() )
+        out[out.count()-1] += c1;
+
+      tag  = rx.cap( 1 );
+      atts = rx.cap( 2 );
+      ext  = rx.cap( 3 );
+      cite = rx.cap( 4 );
+      graf = rx.cap( 5 );
+
+      fBlock( rx.capturedTexts(), o1, o2, content, c2, c1 );
+      
+      if( ext.isEmpty() )
+        *i = QString( "%1%2%3%4%5" )
+          .arg( o1 ).arg( o2 ).arg( content ).arg( c2 ).arg( c1 );
+      else
+        // Block is extended; we'll close it in the next iteration
+        *i = QString( "%1%2%3%4" )
+          .arg( o1 ).arg( o2 ).arg( content ).arg( c2 );
+    }
+    else {
+      anon = 1; // Anonymous block
+      
+      if( !ext.isEmpty() || !i->startsWith( ' ' ) ) {
+        fBlock( rx.capturedTexts(), o1, o2, content, c2, c1 );
+        if( rx.cap( 1 ) == "p" && !hasRawText( content ) )
+          *i = content;
+        else
+          *i = QString( "%1%2%3" ).arg( o2 ).arg( content ).arg( c2 );
+      }
+      else
+        *i = graf( *i );
+    }
+
+    *i = doPBr( *i );
+    i->replace( "<br>", "<br />" );
+    
+    if( anon && !ext.isEmpty() )
+      out[out.count()-1] = *i;
+    else
+      out << *i;
+
+    if( ext.isEmpty() ) {
+      tag = "p";
+      atts = "";
+      cite = "";
+      graf = "";
+    }
+  }
+  if( !ext.isEmpty() )
+    out.last() += c1;
+
+  return out.join( "\n\n" );
+}
                                  
+QString QijTextile::getRefs( QString &in )
+{
+  int pos = 0;
+  QString ourString( in );
+  QStringList caps;
+  QRegExp rv( "(?<=^|\\s)\[(.+)\\]((?:http://|/)\\S+)(?=\\s|$)" );
+  rv.setMinimal( true );
+
+  while( rv.indexIn( ourString, pos ) != -1 ) {
+    caps = rv.capturedTexts();
+    urlRefs[caps[1]] = caps[2];
+    ourString.remove( caps[0] );
+    pos += rv.matchedLength();
+  }
+  
+  return ourString;
+}
+
 QString QijTextile::relURL( QString &u )
 {
   QUrl url( u );
@@ -262,6 +354,32 @@ QString QijTextile::fixEntities( QString &in )
   out.replace( "&amp;", "&" );
 
   return out;
+}
+
+QString QijTextile::glyphs( QString &in )
+{
+  QString out( in );
+  QString pnc = "[[:punct:]]";
+
+  out.replace( QRegExp( "\"\\z" ), "\" " );
+  
+  QList<QString> glyphReplace;
+  glyphReplace << "(\\w)'(\\w)\"                           // apostrophe's
+    << "(\\s)'(\\d+\\w?)\\b(?!')"                          // back in '88
+    << "(\\S)'(?=\\s|'.$pnc.'|<|$)/"                       //  single closing
+    << "'"                                                 //  single opening
+    << "(\\S)\\"(?=\\s|'.$pnc.'|<|$)"                      //  double closing
+    << "\""                                                //  double opening
+    << "\\b([A-Z][A-Z0-9]{2,})\\b(?:[(]([^)]*)[)])"        //  3+ uppercase acronym
+    << "\\b([A-Z][A-Z'\\-]+[A-Z])(?=[\\s.,\\)>])"          //  3+ uppercase
+    << "\\b( )?\\.{3}"                                     //  ellipsis
+    << "(\\s?)--(\\s?)"                                    //  em dash
+    << "\\s-(?:\\s|$)"                                     //  en dash
+    << "(\\d+)( ?)x( ?)(?=\\d+)"                           //  dimension sign
+    << "\\b ?[([]TtMm[])]"                                 //  trademark
+    << "\\b ?[([]Rr[])]"                                   //  registered
+    << "\\b ?[([]Cc[])]";                                  //  copyright
+ 
 }
 
 QString QijTextile::cleanWhiteSpace( QString &in )

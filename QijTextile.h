@@ -66,14 +66,21 @@ class QijTextile
   QString rel, hu;
   QStringList urlSchemes, btag;
   QHash<QString, QString> glyph;
+  QMap<QString, QString> urlRefs;
 
   QString parseBlockAttributes( QString &, QString element = "" );
   bool hasRawText( QString & );
+  QString block( QString & );
+  QStringList fBlock( QStringList &, QString &, QString &, QString &,
+                      QString &, QString & );
   QString iAlign( QString & );
   QString hAlign( QString & );
   QString vAlign( QString & );
   QString relURL( QString & );
+  QString getRefs( QString & );
+  // QString refs( QStringList & );
   QString incomingEntities( QString & );
   QString fixEntities( QString & );
+  QString cleanWhiteSpace( QString & );
   QString cleanWhiteSpace( QString & );
 };
