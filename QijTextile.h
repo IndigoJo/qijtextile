@@ -71,5 +71,8 @@ class QijTextile
   QString iAlign( QString & );
   QString hAlign( QString & );
   QString vAlign( QString & );
+  QString relURL( QString & );
   QString incomingEntities( QString & );
+  QString fixEntities( QString & );
+  QString cleanWhiteSpace( QString & );
 };

@@ -195,7 +195,7 @@ QString QijTextile::iAlign( QString &in )
     vals[in] : "";
 }
 
-QString QijTextile::hAlign( QString in )
+QString QijTextile::hAlign( QString &in )
 {
   QMap<QString, QString> vals;
 
@@ -208,7 +208,7 @@ QString QijTextile::hAlign( QString in )
             vals[in] : "" );
 }
 
-QString QijTextile::vAlign( QString in )
+QString QijTextile::vAlign( QString &in )
 {
   QMap<QString, QString> vals;
 
@@ -220,7 +220,47 @@ QString QijTextile::vAlign( QString in )
     vals[in] : "";
 }
 
-QString QijTextile::incomingEntities( QString in )
+QString QijTextile::relURL( QString &u )
+{
+  QUrl url( u );
+  QString out( u );
+  QRegExp rx( "^\\w" );
+
+  if( ( url.scheme().isEmpty() || url.scheme() == "http" ) &&
+      url.host().isEmpty() && (rx.indexIn( url.path() ) != -1) )
+    out = QString( "%1%2" ).arg( hu ).arg( out );
+  
+  if( restricted && url.scheme().isEmpty() && 
+      urlSchemes.contains( url.scheme() ) )
+    return "#";
+  
+  return out;
+}
+
+QString QijTextile::incomingEntities( QString &in )
 {
   return in.replace( QRegExp( "&(?![#a-zA-Z0-9]+;)" ) );
+}
+
+QString QijTextile::fixEntities( QString &in )
+{
+  QString out( in );
+
+  out.replace( "&gt;", ">" );
+  out.replace( "&lt;", "<" );
+  out.replace( "&amp;", "&" );
+
+  return out;
+}
+
+QString QijTextile::cleanWhiteSpace( QString &in )
+{
+  QString out( in );
+
+  out.replace( "\r\n", "\n" );
+  out.replace( QRegExp( "\\n{3,}" ), "\n\n" );
+  out.replace( QRegExp( "\\n *\\n" ), "\n\n" );
+  out.replace( QRegExp( "\"$" ), "\" " );
+
+  return out;
 }
