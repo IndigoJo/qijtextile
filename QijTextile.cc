@@ -236,7 +236,7 @@ QString QijTextile::block( QString &in )
 {
   QString tre( btag.join( "|" ) );
   QStringList ourList( in.split( "\n\n" ) );
-  QStringList out;
+  QStringList params, out;
   QString tag( "p" );
   QString atts, cite, graf, ext;
   QString o1, o2, content, c2, c1;
@@ -248,6 +248,7 @@ QString QijTextile::block( QString &in )
   
   QStringList::iterator i;
   for( i = ourList.begin(); i != ourList.end(); ++i ) {
+    params.clear();
     anon = 0;
 
     if( rx.indexIn( *i ) != -1 ) {
@@ -274,7 +275,8 @@ QString QijTextile::block( QString &in )
       anon = 1; // Anonymous block
       
       if( !ext.isEmpty() || !i->startsWith( ' ' ) ) {
-        fBlock( rx.capturedTexts(), o1, o2, content, c2, c1 );
+        params << QString() << tag << atts << ext << cite << *i;
+        fBlock( params, o1, o2, content, c2, c1 );
         if( rx.cap( 1 ) == "p" && !hasRawText( content ) )
           *i = content;
         else
@@ -303,6 +305,79 @@ QString QijTextile::block( QString &in )
     out.last() += c1;
 
   return out.join( "\n\n" );
+}
+
+void fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
+             QString &c2, QString &c1 )
+{
+  QString fnid;
+  QRegExp rx( "fn(\\d+)" );
+
+  o1 = "";
+  o2 = "";
+  c2 = "";
+  c1 = "";
+
+  QString tag =  in[1];
+  QString atts = parseBlockAttributes( in[2] );
+  QString ext  = in[3];
+  QString cite = in[4];
+  QString ctt  = in[5];
+
+  if( rx.indexIn( tag ) != -1 ) {
+    tag = "p";
+    fnid = (fn.at( rx.cap( 1 ) ).isEmpty()) ?
+      rx.cap( 1 ) : fn.at( rx.cap( 1 ) );
+    atts += QString( " id=\"%1\"" ).arg( fnid );
+    if( !atts.contains( "class=" ) )
+      atts += " class=\"footnote\"";
+    ctt = QString( "<sup>%1</sup>%2" ).arg( rx.cap( 1 ) ).arg( ctt );
+  }
+ 
+  if( tag == "bq" ) {
+    cite = checkRefs( cite );
+    if( cite.isEmpty() )
+      cite = QString( " cite=\"%1\"" ).arg( cite );
+    else
+      cite = "";
+    o1 = QString( "\t<blockquote%1%2>\n" ).arg( cite ).arg( atts );
+    o2 = QString( "\t\t<p%1>" ).arg( atts );
+    c2 = "</p>";
+    c1 = "\n\t</blockquote>";
+  }
+  else {
+    if( tag == "bc" ) {
+      o1 = QString( "<pre%1>" ).arg( atts );
+      o2 = QString( "<code%1>" ).arg( atts );
+      c2 = "</code>";
+      c1 = "</pre>";
+      ctt = shelve( encode_html( ctt.remove( QRegExp( "\\n*$" ) ).append( "\n" ) ) );
+    }
+    else {
+      if( tag == "notextile" ) {
+        ctt = shelve( ctt );
+        o1 = "";
+        o2 = "";
+        c2 = "";
+        c1 = "";
+      }
+      else {
+        if( tag == "pre" ) {
+          ctt = shelve( encode_html( ctt.remove( QRegExp( "\\n*$" ) ).append( "\n" ) ) );
+          o1 = QString( "<pre%1>" ).arg( atts );
+          o2 = "";
+          c2 = "";
+          c1 = "</pre>";
+        }
+        else {
+          o2 = QString( "\t<%1%2>" ).arg( tag ).arg( atts );
+          c2 = "</$tag>";
+        }
+      }
+    }
+  }
+
+  content = graf( ctt );
 }
                                  
 QString QijTextile::getRefs( QString &in )

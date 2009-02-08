@@ -71,8 +71,8 @@ class QijTextile
   QString parseBlockAttributes( QString &, QString element = "" );
   bool hasRawText( QString & );
   QString block( QString & );
-  QStringList fBlock( QStringList &, QString &, QString &, QString &,
-                      QString &, QString & );
+  void fBlock( QStringList &, QString &, QString &, QString &,
+               QString &, QString & );
   QString iAlign( QString & );
   QString hAlign( QString & );
   QString vAlign( QString & );
