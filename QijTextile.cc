@@ -183,6 +183,31 @@ QString QijTextile::parseBlockAttributes( QString &in, QString element )
   return QString( "" );
 } 
 
+QString QijTextile::iAlign( QString &in )
+{
+  QMap<QString, QString> vals;
+
+  vals["<"] = "left";
+  vals["="] = "center";
+  vals[">"] = "right";
+
+  return vals.contains( in ) ?
+    vals[in] : "";
+}
+
+QString QijTextile::hAlign( QString in )
+{
+  QMap<QString, QString> vals;
+
+  vals["<"] = "left";
+  vals["="] = "center";
+  vals[">"] = "right";
+  vals["<>"] = "justify";
+
+  return( vals.contains( in ) ?
+            vals[in] : "" );
+}
+
 QString QijTextile::vAlign( QString in )
 {
   QMap<QString, QString> vals;
@@ -191,10 +216,8 @@ QString QijTextile::vAlign( QString in )
   vals["-"] = "middle";
   vals["~"] = "bottom";
 
-  if( vals.contains( in ) )
-    return vals[in];
-  else
-    return "";
+  return vals.contains( in ) ?
+    vals[in] : "";
 }
 
 QString QijTextile::incomingEntities( QString in )
