@@ -515,3 +515,11 @@ QString QijTextile::cleanWhiteSpace( QString &in )
 
   return out;
 }
+
+QString QijTextile::blockLite( QString &in )
+{
+  btag = QStringList();
+  btag << "bq" << "p";
+  return block( QString( "%1\n\n" ).arg( in ) );
+}
+

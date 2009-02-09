@@ -17,6 +17,9 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#ifndef QIJTEXTILE_H
+#define QIJTEXTILE_H
+
 #include <QString>
 #include <QStringList> // includes QList
 #include <QHash>
@@ -84,5 +87,8 @@ class QijTextile
   QString incomingEntities( QString & );
   QString fixEntities( QString & );
   QString cleanWhiteSpace( QString & );
-  QString cleanWhiteSpace( QString & );
+  QString blockLite( QString & );
 };
+
+#endif
+
