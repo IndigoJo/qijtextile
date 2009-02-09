@@ -95,6 +95,9 @@ class QijTextile
   QString retrieve( QString & );
   QString cleanWhiteSpace( QString & );
   QString doSpecial( QString &, QString&, QString &, Method meth = Special );
+  QString fSpecial( QStringList & );
+  QString noTextile( QString & );
+  QString fTextile( QStringList & );
   QString encodeHtml( QString &, bool quotes = true );
   QString blockLite( QString & );
 };

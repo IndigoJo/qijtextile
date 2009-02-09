@@ -632,6 +632,20 @@ QString QijTextile::fSpecial( QStringList &in )
     .arg( in[3] );
 }
 
+QString QijTextile::noTextile( QString &in )
+{
+  QString out( doSpecial( in, "<textile>", "</notextile>", Textile ) );
+  return doSpecial( out, "==", "==", Textile );
+}
+
+QString QijTextile::fTextile( QStringList &in )
+{
+  return QString( "%1%2%3" )
+    .arg( in[1] )
+    .arg( shelve( in[2] ) )
+    .arg( in[3] );
+}
+
 QString QijTextile::encodeHtml( QString &in, bool quotes )
 {
   QMap<QChar, QString> symbols;
