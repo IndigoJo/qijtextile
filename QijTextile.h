@@ -75,6 +75,9 @@ class QijTextile
 
   QString parseBlockAttributes( QString &, QString element = "" );
   bool hasRawText( QString & );
+  QString table( QString & );
+  QString lists( QString & );
+  QChar lT( QString & );
   QString doPBr( QString & );
   QString block( QString & );
   void fBlock( QStringList &, QString &, QString &, QString &,

@@ -294,6 +294,69 @@ QString QijTextile::table( QString &text )
   return ourString;
 }
 
+QString QijTextile::lists( QString &in )
+{
+  QString nextLine, thisKey, returnValue;
+  QString tl, nl, atts, content;
+  QMap<QString, bool> lists;
+  QStringList keys, out;
+  QStringList::iterator iter;
+  QString outString( in );
+
+  QRegExp rx1( QString( "^([#*]+%1 .*)$(?![^#*])" ).arg( c ) );
+  rx1.setMinimal( true );
+  QRegExp rx2( QString( "^([#*]+)(%1%2) (.*)$" ).arg( a ).arg( c ) );
+  QRegExp rx3( "^([#*]+)\\s.*" );
+  
+  rx1.indexIn( outString );
+  QStringList text = rx1.cap( 0 ).split( '\n' );
+
+  for( iter = text.begin(); iter != text.end(); ++iter ) {
+    nextLine = *(iter+1);
+    if( rx2.indexIn( *iter ) != -1 ) {
+      tl = rx2.cap( 1 );
+      atts = rx2.cap( 2 );
+      content = rx3.cap( 3 );
+      nl = "";
+      if( rx3.indexIn( nextLine ) != -1 )
+        nl = rx3.cap( 1 );
+      if( !lists.contains( tl ) ) {
+        lists[nl] = true;
+        atts = parseBlockAttributes( atts );
+        *iter = QString( "\t<%1l%2>\n\t\t<li>%3" )
+          .arg( lT( tl ) )
+          .arg( atts )
+          .graf( content );
+      }
+      else
+        *iter = QString( "\t\t<li>%1" ).arg( graf( content ) );
+
+      if( nl.length() <= tl.length() )
+        *iter += "</li>";
+      keys = lists.keys();
+      QStringListIterator iter2;
+      while( iter2.hasPrevious() ) {
+        thisKey = iter2.previous();
+        if( thisKey.length() > nl.length() ) {
+          *iter.append( QString( "\n\t</%1l>" ).arg( lt( thisKey ) ) );
+          if( thisKey.length() > 1 )
+            *iter.append( "</li>" );
+          lists.remove( thisKey );
+        }
+      }
+    }
+    out.append( *iter );
+  }
+
+  outString.replace( rx1.cap( 0 ), out.join( '\n' ) );
+  return outString;  
+}
+
+inline QString QijTextile::lT( QString &in )
+{
+  return (QRegExp( "^#+" ).indexIn( in ) != -1) ? 'o' : 'u';
+}
+
 QString QijTextile::doPBr( QString &in )
 {
   QRegExp rx1( "<(p)([^>]*?)>(.*)(</\\1>)" );
