@@ -85,8 +85,13 @@ class QijTextile
   QString getRefs( QString & );
   // QString refs( QStringList & );
   QString incomingEntities( QString & );
-  QString fixEntities( QString & );
+  // QString fixEntities( QString & );
+  QString glyphs( QString & );
+  QString fCode( QStringList & );
+  QString fPre( QStringList & );
+  QString shelve( QString & );
   QString cleanWhiteSpace( QString & );
+  QString encodeHtml( QString &, bool quotes = true );
   QString blockLite( QString & );
 };
 

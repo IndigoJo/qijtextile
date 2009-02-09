@@ -19,6 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "QijTextile.h"
 
+#include <QtCore>
+
 QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
 {
   hlgn.setPattern( "(?:\<(?!>)|(?<!<)\>|\<\>|\=|[()]+(?! ))" );
@@ -550,6 +552,29 @@ QString QijTextile::glyphs( QString &in )
   }
 
   return out.join( "" );
+}
+
+QString QijTextile::fCode( QStringList &in )
+{
+  return QString( "%1<code>%2</code>%3" )
+    .arg( in[1] )
+    .arg( restricted ? shelve( in[2] ) : shelve ( encodeHtml( in[2] ) ) )
+    .arg( in[3] );
+}
+
+QString QijTextile::fPre( QStringList &in )
+{
+  return QString( "%1<pre>%2</pre>%3" )
+    .arg( in[1] )
+    .arg( restricted ? shelve( in[2] ) : shelve( encodeHtml( in[2] ) ) )
+    .arg( in[3] );
+}
+
+QString QijTextile::shelve( QString &val )
+{
+  QString uuid = QUuid::createUuid().toString();
+  shelf[uuid] = val;
+  return uuid;
 }
 
 QString QijTextile::cleanWhiteSpace( QString &in )
