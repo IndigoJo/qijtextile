@@ -605,6 +605,33 @@ QString QijTextile::cleanWhiteSpace( QString &in )
   return out;
 }
 
+QString QijTextile::doSpecial( QString &text, QString &start,
+                               QString &end, Method meth )
+{
+  QString out( text );
+  QRegExp rx( QString( "(^|\\s|[[({>])%1(.*?)(\s|$|[\])}])?" )
+              .arg( QRegExp::escape( start ) )
+              .arg( QRegExp::escape( end ) ) );
+
+  int i = rx.indexIn( text );
+  switch( meth ) {
+    case Textile: out.replace( rx.cap( 0 ), fTextile( rx.capturedTexts() ) ); break;
+    case Code:    out.replace( rx.cap( 0 ), fCode( rx.capturedTexts() ) );    break;
+    case Pre:     out.replace( rx.cap( 0 ), fPre( rx.capturedtexts() ) );     break;
+    case Special: out.replace( rx.cap( 0 ), fSpecial( rx.capturedtexts() ) ); break;
+  }
+  
+  return out;
+}
+
+QString QijTextile::fSpecial( QStringList &in )
+{
+  return QString( "%1%2%3" )
+    .arg( in[1] )
+    .arg( shelve( encodeHtml( in[2] ) ) )
+    .arg( in[3] );
+}
+
 QString QijTextile::encodeHtml( QString &in, bool quotes )
 {
   QMap<QChar, QString> symbols;

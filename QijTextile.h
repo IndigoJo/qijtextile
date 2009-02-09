@@ -71,6 +71,7 @@ class QijTextile
   QHash<QString, QString> glyph;
   QMap<QString, QString> urlRefs;
   QMap<QString, QString> shelf;
+  typedef enum _method { Textile, Code, Pre, Special } Method;
 
   QString parseBlockAttributes( QString &, QString element = "" );
   bool hasRawText( QString & );
@@ -93,6 +94,7 @@ class QijTextile
   QString shelve( QString & );
   QString retrieve( QString & );
   QString cleanWhiteSpace( QString & );
+  QString doSpecial( QString &, QString&, QString &, Method meth = Special );
   QString encodeHtml( QString &, bool quotes = true );
   QString blockLite( QString & );
 };
