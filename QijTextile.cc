@@ -234,6 +234,66 @@ bool QijTextile::hasRawText( QString &in )
   return !r.isEmpty();
 }
 
+QString QijTextile::table( QString &text )
+{
+  QString ourString( text );
+  QString ratts, catts, ctyp;
+  QStringList::iterator iter1, iter2;
+  QStringList rmtch, cellsList;
+  
+  QRegExp rx1( QString( "^(?:table(_?{%1}{%2}{%3})\\. ?\\n)?^({%2}{%3}\\.? ?\|.*\\|)\\n\\n" )
+               .arg( s ).arg( a ).arg( c ) );
+  QRegExp rx2( "\\|$" );
+  rx2.setMinimal( true );
+  QRegExp rx3( QString( "^(%1%2\\. )(.*)" ).arg( a ).arg( c ) );
+  //rx3.setMinimal( true );
+  QRegExp rx4( QString( "^(_?%1%2%3\\. )(.*)" ).arg( s ).arg( a ).arg( c ) );
+
+  int a = rx1.indexIn( ourString );
+  QStringList matches = rx1.capturedTexts();
+
+  QString tatts = parseBlockAttributes( matches[1] );
+
+  QStringList rows = matches[2].split( rx2, Qt::SkipEmptyParts );
+  for( iter1 = rows.start(); iter2 != rows.end(); ++iter1 ) {
+    if( rx3.indexIn( iter1->section( QRegExp( "\\s*", 1 ) ) ) != -1 ) {
+      ratts = parseBlockAttributes( rx3.cap( 1 ), "tr" );
+      *iter1 = rx3.cap( 2 );
+    }
+    else
+      ratts = "";
+    
+    cells = iter1->split( '|' );
+    for( iter2 = cells.start(); iter2 != cells.end(); ++iter2 ) {
+      ctyp = "d";
+      if( iter2->startsWith( '_' ) )
+        ctyp = "h";
+      if( rx4.indexIn( *iter2 ) != -1 ) {
+        catts = parseBlockAttributes( rx4.cap( 1 ), "td" );
+        *iter2 = rx4.cap( 2 );
+      }
+      else
+        catts = "";
+      
+      *iter2 = graf( span( *iter2 ) );
+  
+      if( !iter2->trimmed().isEmpty() )
+        cellsList.append( QString( "\t\t\t<t%1%2>%3</t%1>" )
+                          .arg( ctyp ).arg( catts ).arg( *iter2 ) );
+    }
+    *iter1 = QString( "\t\t<tr%1>\n%2%3\t\t</tr>" )
+      .arg( ratts ).arg( cellsList.join( "\n" ) )
+      .arg( cellsList.count() ? "\n" : "" );
+    cellsList = QStringList();
+    catts = "";
+  }
+  ourString.replace( rx1.cap( 0 ),
+                     QString( "\t<table%1>\n%2\n\t</table>\n\n" )
+                     .arg( tatts )
+                     .arg( rows.join( "\n" ) ) );
+  return ourString;
+}
+
 QString QijTextile::doPBr( QString &in )
 {
   QRegExp rx1( "<(p)([^>]*?)>(.*)(</\\1>)" );
