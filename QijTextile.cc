@@ -480,17 +480,19 @@ QString QijTextile::fixEntities( QString &in )
 
 QString QijTextile::glyphs( QString &in )
 {
-  QString out( in );
+  QString ourString( in );
+  QStringList out;
+  int j;
   QString pnc = "[[:punct:]]";
 
-  out.replace( QRegExp( "\"\\z" ), "\" " );
+  ourString.replace( QRegExp( "\"\\z" ), "\" " );
   
-  QList<QString> glyphReplace;
-  glyphReplace << "(\\w)'(\\w)\"                           // apostrophe's
-    << "(\\s)'(\\d+\\w?)\\b(?!')"                          // back in '88
+  QList<QString> glyphSearchStrings;
+  glyphReplace << "(\\w)'(\\w)\"                           //  apostrophe's
+    << "(\\s)'(\\d+\\w?)\\b(?!')"                          //  back in '88
     << "(\\S)'(?=\\s|'.$pnc.'|<|$)/"                       //  single closing
     << "'"                                                 //  single opening
-    << "(\\S)\\\"(?=\\s|'.$pnc.'|<|$)"                      //  double closing
+    << "(\\S)\\\"(?=\\s|'.$pnc.'|<|$)"                     //  double closing
     << "\""                                                //  double opening
     << "\\b([A-Z][A-Z0-9]{2,})\\b(?:[(]([^)]*)[)])"        //  3+ uppercase acronym
     << "\\b([A-Z][A-Z'\\-]+[A-Z])(?=[\\s.,\\)>])"          //  3+ uppercase
@@ -498,10 +500,56 @@ QString QijTextile::glyphs( QString &in )
     << "(\\s?)--(\\s?)"                                    //  em dash
     << "\\s-(?:\\s|$)"                                     //  en dash
     << "(\\d+)( ?)x( ?)(?=\\d+)"                           //  dimension sign
-    << "\\b ?[([]TtMm[])]"                                 //  trademark
-    << "\\b ?[([]Rr[])]"                                   //  registered
-    << "\\b ?[([]Cc[])]";                                  //  copyright
- 
+    << "/\\b ?[([]TtMm[])]/i"                              //  trademark
+    << "/\\b ?[([]Rr[])]/i"                                //  registered
+    << "/\\b ?[([]Cc[])]/i";                               //  copyright
+
+  QList<QRegExp> glyphSearch;
+  Q_FOREACH( QString s, glyphSearchStrings ) {
+    glyphReplace << s.endsWith( "/i" ) ?
+      QRegExp( s.section( 1, s.length()-3 ), Qt::CaseInsensitive ) :
+      QRegExp( s );
+  }
+
+  QList<QString> glyphReplace;
+  glyphReplace << QString( "$1%1$2" ).arg( glyphs[txt_apostrophe] )
+    << QString( "$1%1$2" ).arg( glyphs[txt_apostrophe] )
+    << QString( "$1%1" ).arg( glyphs[txt_quote_single_quote] )
+    << glyphs[txt_quote_single_open]
+    << QString( "$1%1" ).arg( glyphs[txt_quote_double_open] )
+    << glyphs[txt_quote_double_open]
+    << "<acronym title=\"$2\">$1</acronym>"
+    << "<span class=\"caps\">$1</span"
+    << QString( "$1%1" ).arg( glyphs[txt_ellipsis] )
+    << QString( "$1%1$2" ).arg( glyphs[txt_emdash] )
+    << QString( " %1 " ).arg( glyphs[txt_endash] )
+    << QString( "$1$2%1$3" ).arg( glyphs[txt_dimension] )
+    << glyphs[txt_trademark]
+    << glyphs[txt_registered]
+    << glyphs[txt_copyright];
+
+
+  QRegExp rx1( "(<.*?>)" );
+  rx.setMinimal( true );
+  QRegExp rx2( "<.*>" );
+
+  QStringList lines = ourString.split( rx1 );
+  QStringList::iterator iter;
+  for( iter = lines.begin(); lines != lines.end(); ++line ) {
+    if( rx2.indexIn( *iter ) != -1 ) {
+      for( int i = 0; i < glyphSearch.count(); ++i ) {
+        if( glyphSearch[i].indexIn( *iter ) != -1 ) {
+          *iter.replace( glyphSearch[i].cap( 0 ),
+                      glyphReplace[i].replace( "$1", glyphSearch[i].cap( 1 ) )
+                                     .replace( "$2", glyphSearch[i].cap( 2 ) )
+                                     .replace( "$3", glyphSearch[i].cap( 3 ) ) );
+        }
+      }
+    }
+    out += *iter;
+  }
+
+  return out.join( "" );
 }
 
 QString QijTextile::cleanWhiteSpace( QString &in )
