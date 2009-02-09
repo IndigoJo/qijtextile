@@ -232,6 +232,27 @@ bool QijTextile::hasRawText( QString &in )
   return !r.isEmpty();
 }
 
+QString QijTextile::doPBr( QString &in )
+{
+  QRegExp rx1( "<(p)([^>]*?)>(.*)(</\\1>)" );
+  QRegExp rx2( "(.+)(?<!<br>|<br />)\\n(?![#*\\s|])" );
+  QStringList caps1, caps2;
+  QString content, caps1_3, out;
+
+  int a = rx1.indexIn( in );
+  caps1 = rx1.capturedTexts();
+  caps1_3 = caps1[3];
+  a = rx2.indexIn( caps1_3 );
+  caps2 = rx2.capturedTexts();
+  content = caps1_3.replace( caps2[0], QString( "%1<br />" ).arg( caps2[1] ) );
+      
+  return QString( "<%1%2>%3%4" )
+    .arg( rx.cap( 1 ) )
+    .arg( rx.cap( 2 ) )
+    .arg( content )
+    .arg( rx.cap( 4 ) );
+}
+
 QString QijTextile::block( QString &in )
 {
   QString tre( btag.join( "|" ) );
