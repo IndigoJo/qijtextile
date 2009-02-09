@@ -490,7 +490,7 @@ QString QijTextile::glyphs( QString &in )
     << "(\\s)'(\\d+\\w?)\\b(?!')"                          // back in '88
     << "(\\S)'(?=\\s|'.$pnc.'|<|$)/"                       //  single closing
     << "'"                                                 //  single opening
-    << "(\\S)\\"(?=\\s|'.$pnc.'|<|$)"                      //  double closing
+    << "(\\S)\\\"(?=\\s|'.$pnc.'|<|$)"                      //  double closing
     << "\""                                                //  double opening
     << "\\b([A-Z][A-Z0-9]{2,})\\b(?:[(]([^)]*)[)])"        //  3+ uppercase acronym
     << "\\b([A-Z][A-Z'\\-]+[A-Z])(?=[\\s.,\\)>])"          //  3+ uppercase
@@ -514,6 +514,24 @@ QString QijTextile::cleanWhiteSpace( QString &in )
   out.replace( QRegExp( "\"$" ), "\" " );
 
   return out;
+}
+
+QString QijTextile::encodeHtml( QString &in, bool quotes )
+{
+  QMap<QChar, QString> symbols;
+  symbols['&'] = "&#38;";
+  symbols['<'] = "&#60;";
+  symbols['>'] = "#&62;";
+
+  if( quotes ) {
+    symbols['\''] = "&#39";
+    symbols['"'] = "&#34";
+  }
+
+  QString rv( in );
+  Q_FOREACH( QChar ch, symbols.keys() )
+    rv.replace( ch, symbol[ch] );
+  return rv;
 }
 
 QString QijTextile::blockLite( QString &in )
