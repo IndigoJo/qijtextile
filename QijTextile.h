@@ -70,6 +70,7 @@ class QijTextile
   QStringList urlSchemes, btag;
   QHash<QString, QString> glyph;
   QMap<QString, QString> urlRefs;
+  QMap<QString, QString> shelf;
 
   QString parseBlockAttributes( QString &, QString element = "" );
   bool hasRawText( QString & );
@@ -90,6 +91,7 @@ class QijTextile
   QString fCode( QStringList & );
   QString fPre( QStringList & );
   QString shelve( QString & );
+  QString retrieve( QString & );
   QString cleanWhiteSpace( QString & );
   QString encodeHtml( QString &, bool quotes = true );
   QString blockLite( QString & );

@@ -577,6 +577,22 @@ QString QijTextile::shelve( QString &val )
   return uuid;
 }
 
+QString QijTextile::retrieve( QString &in )
+{
+  QString out( in );
+  QString old;
+  QMap<QString, QString>::iterator iter;
+
+  do {
+    old = out;
+    for( iter = shelf.begin(); iter != shelf.end(); ++iter ) {
+      out.replace( iter->key(), iter->value() );
+    }
+  } while( old != out );
+
+  return out;
+}
+
 QString QijTextile::cleanWhiteSpace( QString &in )
 {
   QString out( in );
