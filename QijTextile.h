@@ -95,6 +95,8 @@ class QijTextile
   // QString fixEntities( QString & );
   QString glyphs( QString & );
   QString image( QString & );
+  QString fImage( QStringList & );
+  QString code( QString & );
   QString fCode( QStringList & );
   QString fPre( QStringList & );
   QString shelve( QString & );

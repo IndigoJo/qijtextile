@@ -648,23 +648,61 @@ QString QijTextile::relURL( QString &u )
 
 QString QijTexile::image( QString &in )
 {
-  QRegExp rx( QString( "(?:[[{])?"          // pre
-            "\\!"                 // opening !
-            "(\\<|\\=|\\>)??"       // optional alignment atts
-            "(%1)"         // optional style,class atts
-            "(?:\\. )?"           // optional dot-space
-            "([^\\s(!]+)"         // presume this is the src
-            "\\s?"                // optional space
-            "(?:\\(([^\\)]+)\\))?"  // optional title
-            "\\!"                 // closing
-            "(?::(\\S+))?"        // optional href
-            "(?:[\\]}]|(?=\\s|$))" // lookahead: space or end of string
+  QRegExp rx( QString( "(?:[[{])?"            // pre
+                       "\\!"                  // opening !
+                       "(\\<|\\=|\\>)??"      // optional alignment atts
+                       "(%1)"                 // optional style,class atts
+                       "(?:\\. )?"            // optional dot-space
+                       "([^\\s(!]+)"          // presume this is the src
+                       "\\s?"                 // optional space
+                       "(?:\\(([^\\)]+)\\))?" // optional title
+                       "\\!"                  // closing
+                       "(?::(\\S+))?"         // optional href
+                       "(?:[\\]}]|(?=\\s|$))" // lookahead: space or end of string
             ).arg( c ) );
   rx.setMinimal( true );
   
   QString out( in );
   if( rx.indexIn( out ) != -1 )
     out.replace( rx, fImage( rx.capturedTexts() ) );
+
+  return out;
+}
+
+QString QijTextile::fImage( QStringList &in )
+{
+  QString algn = in[1];
+  QString atts = parseBlockAttributes( in[2] );
+  QString url = in[3];
+
+  if( !algn.isEmpty() )
+    atts.append( QString( " align=\"%1\"" ).arg( iAlign( algn ) ) );
+
+  if( !in.value( 4 ).isEmpty() ) {
+    atts.append( QString( " title=\"%1\"" ).arg( in.value( 4 ) ) );
+    atts.append( QString( " alt=\"%1\"" ).arg( in.value( 4 ) ) );
+  }
+  else
+    atts.append( " alt=\"\"" );
+  // Now get image size
+
+  QString href = !in.value( 5 ).isEmpty() ?
+    checkRefs( in.value( 5 ) ) : "";
+  url = relURL( checkRefs( url ) );
+  
+  QStringList out;
+  out << href.isEmpty() ? "" : QString( "<a href=\"%1\">" ).arg( href )
+      << QString( "<img src=\"%1\" %2 />" ).arg( url ).arg( atts )
+      << href.isEmpty() ? "" : "</a>";
+  return out.join( "" );
+}
+
+QString QijTextile::code( QString &in )
+{
+  QString out( in );
+  out = doSpecial( out, "<code>", "</code>", Code );
+  out = doSpecial( out, "@", "@", Code );
+  out = doSpecial( out, "<pre>", "</pre>", Pre );
 
   return out;
 }
