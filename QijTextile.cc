@@ -186,43 +186,6 @@ QString QijTextile::parseBlockAttributes( QString &in, QString element )
   return QString( "" );
 } 
 
-QString QijTextile::iAlign( QString &in )
-{
-  QMap<QString, QString> vals;
-
-  vals["<"] = "left";
-  vals["="] = "center";
-  vals[">"] = "right";
-
-  return vals.contains( in ) ?
-    vals[in] : "";
-}
-
-QString QijTextile::hAlign( QString &in )
-{
-  QMap<QString, QString> vals;
-
-  vals["<"] = "left";
-  vals["="] = "center";
-  vals[">"] = "right";
-  vals["<>"] = "justify";
-
-  return( vals.contains( in ) ?
-            vals[in] : "" );
-}
-
-QString QijTextile::vAlign( QString &in )
-{
-  QMap<QString, QString> vals;
-
-  vals["^"] = "top";
-  vals["-"] = "middle";
-  vals["~"] = "bottom";
-
-  return vals.contains( in ) ?
-    vals[in] : "";
-}
-
 bool QijTextile::hasRawText( QString &in )
 {
   // Checks whether text is not already enclosed with a block tag
@@ -913,5 +876,42 @@ QString QijTextile::blockLite( QString &in )
   btag = QStringList();
   btag << "bq" << "p";
   return block( QString( "%1\n\n" ).arg( in ) );
+}
+
+QString QijTextile::iAlign( QString &in )
+{
+  QMap<QString, QString> vals;
+
+  vals["<"] = "left";
+  vals["="] = "center";
+  vals[">"] = "right";
+
+  return vals.contains( in ) ?
+    vals[in] : "";
+}
+
+QString QijTextile::hAlign( QString &in )
+{
+  QMap<QString, QString> vals;
+
+  vals["<"] = "left";
+  vals["="] = "center";
+  vals[">"] = "right";
+  vals["<>"] = "justify";
+
+  return( vals.contains( in ) ?
+            vals[in] : "" );
+}
+
+QString QijTextile::vAlign( QString &in )
+{
+  QMap<QString, QString> vals;
+
+  vals["^"] = "top";
+  vals["-"] = "middle";
+  vals["~"] = "bottom";
+
+  return vals.contains( in ) ?
+    vals[in] : "";
 }
 

@@ -85,9 +85,6 @@ class QijTextile
   QString graf( QString & );
   QString span( QString & );
   QString fSpan( QStringList & );
-  QString iAlign( QString & );
-  QString hAlign( QString & );
-  QString vAlign( QString & );
   QString relURL( QString & );
   QString getRefs( QString & );
   // QString refs( QStringList & );
@@ -108,6 +105,9 @@ class QijTextile
   QString fTextile( QStringList & );
   QString encodeHtml( QString &, bool quotes = true );
   QString blockLite( QString & );
+  QString iAlign( QString & );
+  QString hAlign( QString & );
+  QString vAlign( QString & );
 };
 
 #endif
