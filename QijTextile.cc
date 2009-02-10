@@ -551,6 +551,65 @@ QString QijTextile::graf( QString &in )
   
   return text.remove( QRegExp( "\\n*$" ) );
 }
+
+QString QijTextile::span( QString &in )
+{
+  int i;
+  QStringList qtags;
+  qtags << "\\*\\*" << "\\*" << "\\?\\?"
+        << "-" << "__" << "_"
+        << "%" << "\\+" << "~" << "\\^";
+  QString pnct( ".,\"'?!;:" );
+  QString rxs;
+  QString out( in );
+  QString rxs_base = QString( "(?:^|(?<=[\\s>%1])|([{[]))"
+                         "($f)(?!$f)"
+                         "({%2})"
+                         "(?::(\\S+))?"
+                         "([^\\s$f]+|\\S[^$f\\n]*[^\\s$f\\n])"
+                         "([%1]*)"
+                         "$f"
+                         "(?:$|([\\]}])|(?=[[:punct:]]{1,2}|\\s))" )
+    .arg( pnct ).arg( c );
+  QRegExp rx1;
+  
+  Q_FOREACH( QString qtag, qtags ) {
+    rxs = rxs_base;
+    rx1 = QRegExp( rxs.replace( "$f", qtag ) );
+    i = rx1.indexIn( out );
+    out.replace( rx1, fSpan( rx1.capturedTexts() ) );
+  }
+  
+  return out;
+}
+
+QString QijTextile::fSpan( QStringList &in )
+{
+  QMap<QString, QString> qtags;
+  qtags["*"] = "strong";
+  qtags["**"] = "b";
+  qtags["??"] = "cite";
+  qtags["_"]  = "em";
+  qtags["__"] = "i";
+  qtags["-"]  = "del";
+  qtags["%"] = "span";
+  qtags["+"] = "ins";
+  qtags["~"] = "sub";
+  qtags["^"] = "sup";
+
+  QString tag = qtags.value( in[1] );
+  QString atts = parseBlockAttributes( in[2] );
+  QString cite = in[3];
+  QString content = in[4];
+  QString end = in[5];
+
+  if( !cite.isEmpty() )
+    atts.append( QString( "cite=\"%1\"" ).arg( cite ) );
+
+  QString out = QString( "<%1%2>%3%4</%1>" )
+    .arg( tag ).arg( atts ).arg( content ).arg( end );
+  return out;
+}
                                  
 QString QijTextile::getRefs( QString &in )
 {

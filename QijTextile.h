@@ -83,6 +83,8 @@ class QijTextile
   void fBlock( QStringList &, QString &, QString &, QString &,
                QString &, QString & );
   QString graf( QString & );
+  QString span( QString & );
+  QString fSpan( QStringList & );
   QString iAlign( QString & );
   QString hAlign( QString & );
   QString vAlign( QString & );
