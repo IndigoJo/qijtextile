@@ -646,6 +646,29 @@ QString QijTextile::relURL( QString &u )
   return out;
 }
 
+QString QijTexile::image( QString &in )
+{
+  QRegExp rx( QString( "(?:[[{])?"          // pre
+            "\\!"                 // opening !
+            "(\\<|\\=|\\>)??"       // optional alignment atts
+            "(%1)"         // optional style,class atts
+            "(?:\\. )?"           // optional dot-space
+            "([^\\s(!]+)"         // presume this is the src
+            "\\s?"                // optional space
+            "(?:\\(([^\\)]+)\\))?"  // optional title
+            "\\!"                 // closing
+            "(?::(\\S+))?"        // optional href
+            "(?:[\\]}]|(?=\\s|$))" // lookahead: space or end of string
+            ).arg( c ) );
+  rx.setMinimal( true );
+  
+  QString out( in );
+  if( rx.indexIn( out ) != -1 )
+    out.replace( rx, fImage( rx.capturedTexts() ) );
+
+  return out;
+}
+
 QString QijTextile::incomingEntities( QString &in )
 {
   return in.replace( QRegExp( "&(?![#a-zA-Z0-9]+;)" ) );
@@ -692,6 +715,7 @@ QString QijTextile::glyphs( QString &in )
   Q_FOREACH( QString s, glyphSearchStrings ) {
     glyphReplace << s.endsWith( "/i" ) ?
       QRegExp( s.section( 1, s.length()-3 ), Qt::CaseInsensitive ) :
+      QString image( QString & );
       QRegExp( s );
   }
 
