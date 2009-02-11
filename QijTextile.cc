@@ -23,13 +23,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
 {
-  hlgn.setPattern( "(?:\<(?!>)|(?<!<)\>|\<\>|\=|[()]+(?! ))" );
-  vlgn.setPattern( "[\-^~]" );
-  clas.setPattern( "(?:\([^)]+\))" );
-  lnge.setPattern( "(?:\[[^]]+\])" );
-  styl.setPattern( "(?:\{[^}]+\})" );
-  cspn.setPattern( "(?:\\\\\d+)" );
-  rspn.setPattern( "(?:\/\d+)" );
+  hlgn.setPattern( "(?:\\<(?!>)|(?<!<)\\>|\\<\\>|\\=|[()]+(?! ))" );
+  vlgn.setPattern( "[\\-^~]" );
+  clas.setPattern( "(?:\\([^)]+\\))" );
+  lnge.setPattern( "(?:\\[[^]]+\\])" );
+  styl.setPattern( "(?:\\{[^}]+\\})" );
+  cspn.setPattern( "(?:\\\\\\d+)" );
+  rspn.setPattern( "(?:/\\d+)" );
   a.setPattern( QString( "(?:%1|%2)*" )
                 .arg( hlgn.pattern() ).arg( vlgn.pattern() )
                 );
@@ -41,11 +41,11 @@ QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
                 .arg( lnge.pattern() ).arg( hlgn.pattern() )
                 );
 
-  pnct = "[\!i\"#\$%&\\'()\\*\\+,\\-\\./:;<=>\\?@\\[\\\\\\]\\^_`{\\|}\\~]";
-  urlch = "[\\w\"$\-_.+!*\\'(),";\\/?:@=&%#{}|\\\\^~\\[\\]`]";
+  pnct = "[\\!i\\\"#\\$%&\\'()\\*\\+,\\-\\./:;<=>\\?@\\[\\\\\\]\\^_`{\\|}\\~]";
+  urlch = "[\\w\"$\-_.+!*\\'(),\";\\/?:@=&%#{}|\\\\^~\\[\\]`]";
 
   urlSchemes << "http" << "https" << "ftp" << "mailto";
-  btag << "bq" << "bc" << "notextile" << "pre" << "h[1-6]" << "fn\d+" << "p";
+  btag << "bq" << "bc" << "notextile" << "pre" << "h[1-6]" << "fn\\d+" << "p";
 
   glyph["quote_single_open"] = TXT_QUOTE_SINGLE_OPEN;
   glyph["quote_single_close"] = TXT_QUOTE_SINGLE_CLOSE;
@@ -92,7 +92,7 @@ QString QijTextile::convert()
 
     sourceText = retrieve( sourceText );
     
-    sourceText.replace( QRegExp( "<br />(?!\n)" ), "<br />\n" );
+    sourceText.replace( QRegExp( "<br />(?!\\n)" ), "<br />\\n" );
 
     return sourceText;
   }
@@ -107,7 +107,7 @@ QString QijTextile::parseBlockAttributes( QString &in, QString element )
   if( !in.isEmpty() ) {
     matched = in;
     if( element == "td" ) {
-      rx.setPattern( "\\\\{2}(\d+)" );
+      rx.setPattern( "\\\\{2}(\\d+)" );
       if( rx.indexIn( matched ) != -1 )
         colspan = rx.cap( 1 );
       rx.setPattern( "/(\\d+)" );
@@ -204,7 +204,7 @@ QString QijTextile::table( QString &text )
   QStringList::iterator iter1, iter2;
   QStringList rmtch, cellsList;
   
-  QRegExp rx1( QString( "^(?:table(_?{%1}{%2}{%3})\\. ?\\n)?^({%2}{%3}\\.? ?\|.*\\|)\\n\\n" )
+  QRegExp rx1( QString( "^(?:table(_?{%1}{%2}{%3})\\. ?\\n)?^({%2}{%3}\\.? ?\\|.*\\|)\\n\\n" )
                .arg( s ).arg( a ).arg( c ) );
   QRegExp rx2( "\\|$" );
   rx2.setMinimal( true );
