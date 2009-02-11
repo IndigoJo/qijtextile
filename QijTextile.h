@@ -90,6 +90,7 @@ class QijTextile
   // QString refs( QStringList & );
   QString incomingEntities( QString & );
   // QString fixEntities( QString & );
+  QString footnoteRef( QString & );
   QString glyphs( QString & );
   QString image( QString & );
   QString fImage( QStringList & );

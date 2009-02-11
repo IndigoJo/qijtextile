@@ -508,11 +508,8 @@ QString QijTextile::graf( QString &in )
     text = table( text );
   }
 
-  text = span( text );
-  text = footnoteRef( text );
-  text = glyphs( text );
-  
-  return text.remove( QRegExp( "\\n*$" ) );
+  text = glyphs( footnoteRef( span( text ) ) ).remove( QRegExp( "\\n*$" ) );;
+  return text;
 }
 
 QString QijTextile::span( QString &in )
@@ -683,6 +680,25 @@ QString QijTextile::fixEntities( QString &in )
   out.replace( "&lt;", "<" );
   out.replace( "&amp;", "&" );
 
+  return out;
+}
+
+QString QijTextile::footnoteRef( QString &in )
+{
+  QString out( in );
+  QRegExp rx( "\\b\\[([0-9]+)\\](\\s)?" );
+
+  indexIn( rx, in );
+  QStringList matches( rx.capturedTexts() );
+
+  if( fn.value( matches[1] ).isEmpty() )
+    fn[matches[1]] = QUUid::createUuid().toString();
+  QString fnid( fn[matches[1]] );
+  QString fnText( matches.value( 2 ).isEmpty() ? "" : matches.value( 2 ) );
+  QString out( in );
+  out.replace( matches[0],
+               QString( "<sup class=\"footnote\"><a href=\"#fn%1\">%2</a></sup>%3" )
+               .arg( fnid ).arg( matches[2] ).arg( fnText ) );
   return out;
 }
 
