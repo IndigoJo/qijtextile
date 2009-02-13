@@ -64,7 +64,7 @@ class QijTextile
  private:
   bool restricted, noImage, strict, lite;
   QRegExp hlgn, vlgn, clas, lnge, styl, cspn, rspn;
-  QRegExp a, s, c;
+  QString a, s, c;
   QString pnct, urlch; // regexp fragments
   QString rel, hu;
   QStringList urlSchemes, btag;

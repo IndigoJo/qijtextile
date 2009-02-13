@@ -30,16 +30,13 @@ QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
   styl.setPattern( "(?:\\{[^}]+\\})" );
   cspn.setPattern( "(?:\\\\\\d+)" );
   rspn.setPattern( "(?:/\\d+)" );
-  a.setPattern( QString( "(?:%1|%2)*" )
-                .arg( hlgn.pattern() ).arg( vlgn.pattern() )
-                );
-  s.setPattern( QString( "(?:%1|%2)*" )
-                .arg( cspn.pattern() ).arg( rspn.pattern() )
-                );
-  c.setPattern( QString( "(?:%1|%2|%3|%4)*" )
-                .arg( clas.pattern() ).arg( styl.pattern() )
-                .arg( lnge.pattern() ).arg( hlgn.pattern() )
-                );
+  a = QString( "(?:%1|%2)*" )
+    .arg( hlgn.pattern() ).arg( vlgn.pattern() );
+  s = QString( "(?:%1|%2)*" )
+    .arg( cspn.pattern() ).arg( rspn.pattern() );
+  c = QString( "(?:%1|%2|%3|%4)*" )
+    .arg( clas.pattern() ).arg( styl.pattern() )
+    .arg( lnge.pattern() ).arg( hlgn.pattern() );
 
   pnct = "[\\!i\\\"#\\$%&\\'()\\*\\+,\\-\\./:;<=>\\?@\\[\\\\\\]\\^_`{\\|}\\~]";
   urlch = "[\\w\"$\-_.+!*\\'(),\";\\/?:@=&%#{}|\\\\^~\\[\\]`]";
