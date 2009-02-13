@@ -69,34 +69,35 @@ QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
 
 QString QijTextile::convert()
 {
+  outText = sourceText;
+
   if( encode ) {
-    sourceText.replace( QRegExp( "&(?![#a-z0-9]+;)", Qt::CaseInsensitive ), "&#38;" );
-    sourceText = incomingEntities( sourceText );
-    sourceText.replace( "x%x%", "&#38;" );
-    return sourceText;
+    outText.replace( QRegExp( "&(?![#a-z0-9]+;)", Qt::CaseInsensitive ), "&#38;" );
+    outText = incomingEntities( sourceText );
+    outText.replace( "x%x%", "&#38;" );
+    return outText;
   }
   else {
     if( !strict )
-      sourceText = cleanWhiteSpace( sourceText );
+      outText = cleanWhiteSpace( outText );
     
-    getRefs( sourceText );
+    getRefs( outText );
     
     if( !lite )
-      sourceText = block( sourceText );
+      outText = block( outText );
 
-    sourceText = retrieve( sourceText );
+    outText = retrieve( outText );
     
-    sourceText.replace( QRegExp( "<br />(?!\\n)" ), "<br />\\n" );
+    outText.replace( QRegExp( "<br />(?!\\n)" ), "<br />\\n" );
 
-    return sourceText;
+    return outText;
   }
 }
 
-QString QijTextile::convertRestricted( QString &in,
-                                       bool _lite, bool _noImage,
+QString QijTextile::convertRestricted( bool _lite, bool _noImage,
                                        QString &_rel )
 {
-  text = in;
+  outText = sourceText;
   restricted = true;
   lite = _lite;
   noImage = _noImage;
@@ -104,8 +105,22 @@ QString QijTextile::convertRestricted( QString &in,
   if( !rel.isEmpty() ) {
     rel = _rel;
 
-    
-  
+    outText = encodeHtml( outText, false );
+    outText = stripWhiteSpace( outText );
+    outText = getRefs( outText );
+
+    if( lite ) 
+      outText = blockLite( outText );
+    else
+      outText = block( outText );
+
+    outText = retrieve( outText );
+
+    outText.replace( "<br />", "br />\n" );
+  }
+
+  return outText;
+}
 
 QString QijTextile::parseBlockAttributes( QString &in, QString element )
 {
