@@ -62,8 +62,9 @@ class QijTextile
     return substitute( a, QRegExp( b ), c ); }
 
  private:
+  QString sourceText;
   bool restricted, noImage, strict, lite;
-  QRegExp hlgn, vlgn, clas, lnge, styl, cspn, rspn;
+  QString hlgn, vlgn, clas, lnge, styl, cspn, rspn;
   QString a, s, c;
   QString pnct, urlch; // regexp fragments
   QString rel, hu;

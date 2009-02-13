@@ -23,20 +23,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
 {
-  hlgn.setPattern( "(?:\\<(?!>)|(?<!<)\\>|\\<\\>|\\=|[()]+(?! ))" );
-  vlgn.setPattern( "[\\-^~]" );
-  clas.setPattern( "(?:\\([^)]+\\))" );
-  lnge.setPattern( "(?:\\[[^]]+\\])" );
-  styl.setPattern( "(?:\\{[^}]+\\})" );
-  cspn.setPattern( "(?:\\\\\\d+)" );
-  rspn.setPattern( "(?:/\\d+)" );
-  a = QString( "(?:%1|%2)*" )
-    .arg( hlgn.pattern() ).arg( vlgn.pattern() );
-  s = QString( "(?:%1|%2)*" )
-    .arg( cspn.pattern() ).arg( rspn.pattern() );
+  hlgn = "(?:\\<(?!>)|(?<!<)\\>|\\<\\>|\\=|[()]+(?! ))";
+  vlgn = "[\\-^~]";
+  clas = "(?:\\([^)]+\\))";
+  lnge = "(?:\\[[^]]+\\])";
+  styl = "(?:\\{[^}]+\\})";
+  cspn = "(?:\\\\\\d+)";
+  rspn = "(?:/\\d+)";
+  a = QString( "(?:%1|%2)*" ).arg( hlgn ).arg( vlgn );
+  s = QString( "(?:%1|%2)*" ).arg( cspn ).arg( rspn );
   c = QString( "(?:%1|%2|%3|%4)*" )
-    .arg( clas.pattern() ).arg( styl.pattern() )
-    .arg( lnge.pattern() ).arg( hlgn.pattern() );
+    .arg( clas ).arg( styl ).arg( lnge ).arg( hlgn );
 
   pnct = "[\\!i\\\"#\\$%&\\'()\\*\\+,\\-\\./:;<=>\\?@\\[\\\\\\]\\^_`{\\|}\\~]";
   urlch = "[\\w\"$\-_.+!*\\'(),\";\\/?:@=&%#{}|\\\\^~\\[\\]`]";
@@ -94,6 +91,21 @@ QString QijTextile::convert()
     return sourceText;
   }
 }
+
+QString QijTextile::convertRestricted( QString &in,
+                                       bool _lite, bool _noImage,
+                                       QString &_rel )
+{
+  text = in;
+  restricted = true;
+  lite = _lite;
+  noImage = _noImage;
+  
+  if( !rel.isEmpty() ) {
+    rel = _rel;
+
+    
+  
 
 QString QijTextile::parseBlockAttributes( QString &in, QString element )
 {
