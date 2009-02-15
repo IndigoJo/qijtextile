@@ -94,6 +94,12 @@ QString QijTextile::convert()
   }
 }
 
+static QString QijTextile::textileThis( QString &text, QString _rel )
+{
+  QijTextile t( text, _rel );
+  return t.convert();
+}
+
 QString QijTextile::convertRestricted( bool _lite, bool _noImage,
                                        QString &_rel )
 {

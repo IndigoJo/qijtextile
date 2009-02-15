@@ -47,7 +47,7 @@ class QijTextile
   QijTextile( QString &, QString _rel = "" );
   QString convert( bool encode = false );
   QString convertRestricted( bool _lite = true, bool _noImages,
-                             QString &_rel = "" );
+                             QString _rel = "" );
   QString toString();
 
   // Set the bools which were set in textileThis; by default, all are false
@@ -58,7 +58,7 @@ class QijTextile
   void setRel( QString &_rel ) { rel = _rel; }
   void setText( QString t )    { sourceText = t; }
   
-  static QString textileThis( QString & );
+  static QString textileThis( QString &, QString rel = "" );
   static QString substitute( QString &, QRegExp &, QString & );
   static QString substitute( QString &a, QString &b, QString &c ) {
     return substitute( a, QRegExp( b ), c ); }
