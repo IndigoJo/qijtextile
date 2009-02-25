@@ -663,8 +663,14 @@ QString QijTextile::links( QString in )
   return in;
 }
   
-  
-                                 
+QString QijTextile::checkRefs( QString in )
+{
+  if( urlRefs.contains( in ) )
+    return urlRefs.value( in );
+  else
+    return in;
+}
+
 QString QijTextile::getRefs( QString &in )
 {
   int pos = 0;
@@ -683,7 +689,7 @@ QString QijTextile::getRefs( QString &in )
   return ourString;
 }
 
-QString QijTextile::relURL( QString &u )
+QString QijTextile::relURL( QString u )
 {
   QUrl url( u );
   QString out( u );
@@ -852,14 +858,17 @@ QString QijTextile::glyphs( QString ourString )
 
   QStringList lines = ourString.split( rx1 );
   QStringList::iterator iter;
+  QString rString;
   for( iter = lines.begin(); iter != lines.end(); ++iter ) {
     if( rx2.indexIn( *iter ) != -1 ) {
       for( int i = 0; i < glyphSearch.count(); ++i ) {
         if( glyphSearch[i].indexIn( *iter ) != -1 ) {
-          *iter.replace( glyphSearch[i].cap( 0 ),
+          rString = *iter;
+          rString.replace( glyphSearch[i].cap( 0 ),
                       glyphReplace[i].replace( "$1", glyphSearch[i].cap( 1 ) )
                                      .replace( "$2", glyphSearch[i].cap( 2 ) )
                                      .replace( "$3", glyphSearch[i].cap( 3 ) ) );
+          *iter = rString;
         }
       }
     }
@@ -928,7 +937,7 @@ QString QijTextile::doSpecial( QString &text, QString start,
               .arg( QRegExp::escape( start ) )
               .arg( QRegExp::escape( end ) ) );
 
-  int i = rx.indexIn( text );
+  rx.indexIn( text );
   switch( meth ) {
     case Textile: out.replace( rx.cap( 0 ), fTextile( rx.capturedTexts() ) ); break;
     case Code:    out.replace( rx.cap( 0 ), fCode( rx.capturedTexts() ) );    break;

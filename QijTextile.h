@@ -93,7 +93,8 @@ class QijTextile
   QString span( QString & );
   QString fSpan( QStringList & );
   QString links( QString );
-  QString relURL( QString & );
+  QString checkRefs( QString );
+  QString relURL( QString );
   QString getRefs( QString & );
   // QString refs( QStringList & );
   QString incomingEntities( QString );
