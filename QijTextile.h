@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <QHash>
 #include <QUrl>
 #include <QRegExp>
+#include <QMap>
 
 #define TXT_QUOTE_SINGLE_OPEN           "&#8216"
 #define TXT_QUOTE_SINGLE_CLOSE          "&#8217"
@@ -46,7 +47,7 @@ class QijTextile
  public:
   QijTextile( QString &, QString _rel = "" );
   QString convert( bool encode = false );
-  QString convertRestricted( bool _lite = true, bool _noImages,
+  QString convertRestricted( bool _lite = true, bool _noImage = true,
                              QString _rel = "" );
   QString toString();
 
@@ -58,10 +59,11 @@ class QijTextile
   void setRel( QString &_rel ) { rel = _rel; }
   void setText( QString t )    { sourceText = t; }
   
-  static QString textileThis( QString &, QString rel = "" );
-  static QString substitute( QString &, QRegExp &, QString & );
+  static QString textileThis( QString &, QString _rel = "" );
+  static QString textileRestricted( QString &, QString _rel = "" );
+  /* static QString substitute( QString &, QRegExp &, QString & );
   static QString substitute( QString &a, QString &b, QString &c ) {
-    return substitute( a, QRegExp( b ), c ); }
+    return substitute( a, QRegExp( b ), c ); } */
 
  private:
   QString sourceText, outText;
@@ -74,44 +76,47 @@ class QijTextile
   QHash<QString, QString> glyph;
   QMap<QString, QString> urlRefs;
   QMap<QString, QString> shelf;
+  QMap<QString, QString> fn;
   typedef enum _method { Textile, Code, Pre, Special } Method;
 
-  QString parseBlockAttributes( QString &, QString element = "" );
+  QString parseBlockAttributes( QString, QString element = "" );
   bool hasRawText( QString & );
   QString table( QString & );
   QString lists( QString & );
   QChar lT( QString & );
   QString doPBr( QString & );
-  QString block( QString & );
+  QString block( QString );
   void fBlock( QStringList &, QString &, QString &, QString &,
                QString &, QString & );
-  QString graf( QString & );
+  //QString graf( QString & );
+  QString graff( QString );
   QString span( QString & );
   QString fSpan( QStringList & );
+  QString links( QString );
   QString relURL( QString & );
   QString getRefs( QString & );
   // QString refs( QStringList & );
-  QString incomingEntities( QString & );
-  // QString fixEntities( QString & );
-  QString footnoteRef( QString & );
-  QString glyphs( QString & );
+  QString incomingEntities( QString );
+  QString fixEntities( QString & );
+  QString footnoteRef( QString );
+  QString glyphs( QString );
   QString image( QString & );
   QString fImage( QStringList & );
   QString code( QString & );
-  QString fCode( QStringList & );
-  QString fPre( QStringList & );
-  QString shelve( QString & );
+  QString fCode( QStringList );
+  QString fPre( QStringList );
+  QString shelve( QString );
   QString retrieve( QString & );
   QString cleanWhiteSpace( QString & );
-  QString doSpecial( QString &, QString&, QString &, Method meth = Special );
-  QString fSpecial( QStringList & );
+  QString doSpecial( QString &, QString, QString, Method meth = Special );
+  QString fSpecial( QStringList );
   QString noTextile( QString & );
-  QString fTextile( QStringList & );
+  QString fTextile( QStringList );
   QString encodeHtml( QString &, bool quotes = true );
   QString blockLite( QString & );
-  QString iAlign( QString & );
-  QString hAlign( QString & );
-  QString vAlign( QString & );
+  QString iAlign( QString );
+  QString hAlign( QString );
+  QString vAlign( QString );
 };
 
 #endif

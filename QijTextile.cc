@@ -21,7 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <QtCore>
 
-QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
+QijTextile::QijTextile( QString &_sourceText, QString _rel )
+          : sourceText( _sourceText ), rel( _rel )
 {
   hlgn = "(?:\\<(?!>)|(?<!<)\\>|\\<\\>|\\=|[()]+(?! ))";
   vlgn = "[\\-^~]";
@@ -36,7 +37,7 @@ QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
     .arg( clas ).arg( styl ).arg( lnge ).arg( hlgn );
 
   pnct = "[\\!i\\\"#\\$%&\\'()\\*\\+,\\-\\./:;<=>\\?@\\[\\\\\\]\\^_`{\\|}\\~]";
-  urlch = "[\\w\"$\-_.+!*\\'(),\";\\/?:@=&%#{}|\\\\^~\\[\\]`]";
+  urlch = "[\\w\"$\\-_.+!*\\'(),\";\\/?:@=&%#{}|\\\\^~\\[\\]`]";
 
   urlSchemes << "http" << "https" << "ftp" << "mailto";
   btag << "bq" << "bc" << "notextile" << "pre" << "h[1-6]" << "fn\\d+" << "p";
@@ -63,11 +64,11 @@ QijTextile::QijTextile( QString &_sourceText, QString _rel = "" )
   strict = false;
   noImage = false;
 
-  sourceText = _sourceText;
-  rel = _rel;
+  //sourceText = _sourceText;
+  //rel = _rel;
 }
 
-QString QijTextile::convert()
+QString QijTextile::convert( bool encode )
 {
   outText = sourceText;
 
@@ -94,14 +95,20 @@ QString QijTextile::convert()
   }
 }
 
-static QString QijTextile::textileThis( QString &text, QString _rel )
+QString QijTextile::textileThis( QString &text, QString _rel )
 {
   QijTextile t( text, _rel );
   return t.convert();
 }
 
+QString QijTextile::textileRestricted( QString &text, QString _rel )
+{
+  QijTextile t( text, _rel );
+  return t.convertRestricted();
+}
+
 QString QijTextile::convertRestricted( bool _lite, bool _noImage,
-                                       QString &_rel )
+                                       QString _rel )
 {
   outText = sourceText;
   restricted = true;
@@ -112,7 +119,7 @@ QString QijTextile::convertRestricted( bool _lite, bool _noImage,
     rel = _rel;
 
     outText = encodeHtml( outText, false );
-    outText = stripWhiteSpace( outText );
+    outText = cleanWhiteSpace( outText );
     outText = getRefs( outText );
 
     if( lite ) 
@@ -128,7 +135,7 @@ QString QijTextile::convertRestricted( bool _lite, bool _noImage,
   return outText;
 }
 
-QString QijTextile::parseBlockAttributes( QString &in, QString element )
+QString QijTextile::parseBlockAttributes( QString in, QString element )
 {
   QString style, klass, lang, colspan, rowspan, id, atts;
   QString matched, rv;
@@ -153,8 +160,8 @@ QString QijTextile::parseBlockAttributes( QString &in, QString element )
 
     rx.setPattern( "\\{([^}]*)\\}" );
     if( rx.indexIn( matched ) != -1 ) {
-      style += rv.cap( 1 ).remove( QRegExp( ";$" ) ).append( ";" );
-      matched.remove( rv.cap( 0 ) );
+      style += rx.cap( 1 ).remove( QRegExp( ";$" ) ).append( ";" );
+      matched.remove( rx.cap( 0 ) );
     }
 
     rx.setPattern( "\\[([^]]+)\\]" );
@@ -242,22 +249,22 @@ QString QijTextile::table( QString &text )
   //rx3.setMinimal( true );
   QRegExp rx4( QString( "^(_?%1%2%3\\. )(.*)" ).arg( s ).arg( a ).arg( c ) );
 
-  int a = rx1.indexIn( ourString );
+  rx1.indexIn( ourString );
   QStringList matches = rx1.capturedTexts();
 
   QString tatts = parseBlockAttributes( matches[1] );
 
-  QStringList rows = matches[2].split( rx2, Qt::SkipEmptyParts );
-  for( iter1 = rows.start(); iter2 != rows.end(); ++iter1 ) {
-    if( rx3.indexIn( iter1->section( QRegExp( "\\s*", 1 ) ) ) != -1 ) {
+  QStringList rows = matches[2].split( rx2, QString::SkipEmptyParts );
+  for( iter1 = rows.begin(); iter2 != rows.end(); ++iter1 ) {
+    if( rx3.indexIn( iter1->section( QRegExp( "\\s*" ), 1 ) ) != -1 ) {
       ratts = parseBlockAttributes( rx3.cap( 1 ), "tr" );
       *iter1 = rx3.cap( 2 );
     }
     else
       ratts = "";
     
-    cells = iter1->split( '|' );
-    for( iter2 = cells.start(); iter2 != cells.end(); ++iter2 ) {
+    cellsList = iter1->split( '|' );
+    for( iter2 = cellsList.begin(); iter2 != cellsList.end(); ++iter2 ) {
       ctyp = "d";
       if( iter2->startsWith( '_' ) )
         ctyp = "h";
@@ -268,7 +275,7 @@ QString QijTextile::table( QString &text )
       else
         catts = "";
       
-      *iter2 = graf( span( *iter2 ) );
+      *iter2 = graff( span( *iter2 ) );
   
       if( !iter2->trimmed().isEmpty() )
         cellsList.append( QString( "\t\t\t<t%1%2>%3</t%1>" )
@@ -319,21 +326,21 @@ QString QijTextile::lists( QString &in )
         *iter = QString( "\t<%1l%2>\n\t\t<li>%3" )
           .arg( lT( tl ) )
           .arg( atts )
-          .graf( content );
+          .arg( graff( content ) );
       }
       else
-        *iter = QString( "\t\t<li>%1" ).arg( graf( content ) );
+        *iter = QString( "\t\t<li>%1" ).arg( graff( content ) );
 
       if( nl.length() <= tl.length() )
         *iter += "</li>";
       keys = lists.keys();
-      QStringListIterator iter2;
+      QStringListIterator iter2( keys );
       while( iter2.hasPrevious() ) {
         thisKey = iter2.previous();
         if( thisKey.length() > nl.length() ) {
-          *iter.append( QString( "\n\t</%1l>" ).arg( lt( thisKey ) ) );
+          *iter += ( QString( "\n\t</%1l>" ).arg( lT( thisKey ) ) );
           if( thisKey.length() > 1 )
-            *iter.append( "</li>" );
+            *iter += ( "</li>" );
           lists.remove( thisKey );
         }
       }
@@ -341,11 +348,11 @@ QString QijTextile::lists( QString &in )
     out.append( *iter );
   }
 
-  outString.replace( rx1.cap( 0 ), out.join( '\n' ) );
+  outString.replace( rx1.cap( 0 ), out.join( "\n" ) );
   return outString;  
 }
 
-inline QString QijTextile::lT( QString &in )
+inline QChar QijTextile::lT( QString &in )
 {
   return (QRegExp( "^#+" ).indexIn( in ) != -1) ? 'o' : 'u';
 }
@@ -365,21 +372,22 @@ QString QijTextile::doPBr( QString &in )
   content = caps1_3.replace( caps2[0], QString( "%1<br />" ).arg( caps2[1] ) );
       
   return QString( "<%1%2>%3%4" )
-    .arg( rx.cap( 1 ) )
-    .arg( rx.cap( 2 ) )
+    .arg( rx1.cap( 1 ) )
+    .arg( rx1.cap( 2 ) )
     .arg( content )
-    .arg( rx.cap( 4 ) );
+    .arg( rx1.cap( 4 ) );
 }
 
-QString QijTextile::block( QString &in )
+QString QijTextile::block( QString in )
 {
   QString tre( btag.join( "|" ) );
   QStringList ourList( in.split( "\n\n" ) );
-  QStringList params, out;
+  QStringList params, out, caps;
   QString tag( "p" );
   QString atts, cite, graf, ext;
   QString o1, o2, content, c2, c1;
-  int anon, pos;
+  int anon;
+  QString grafText;
   
   QRegExp rx;
   rx.setPattern( QString( "^(%1)(%2%3)\\.(\\.?)(?::(\\S+))? (.*)$" )
@@ -400,7 +408,8 @@ QString QijTextile::block( QString &in )
       cite = rx.cap( 4 );
       graf = rx.cap( 5 );
 
-      fBlock( rx.capturedTexts(), o1, o2, content, c2, c1 );
+      caps = rx.capturedTexts();
+      fBlock( caps, o1, o2, content, c2, c1 );
       
       if( ext.isEmpty() )
         *i = QString( "%1%2%3%4%5" )
@@ -421,8 +430,11 @@ QString QijTextile::block( QString &in )
         else
           *i = QString( "%1%2%3" ).arg( o2 ).arg( content ).arg( c2 );
       }
-      else
-        *i = graf( *i );
+      else {
+        grafText = *i;
+        grafText = graff( grafText );
+        *i = grafText;
+      }
     }
 
     *i = doPBr( *i );
@@ -446,8 +458,8 @@ QString QijTextile::block( QString &in )
   return out.join( "\n\n" );
 }
 
-void fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
-             QString &c2, QString &c1 )
+void QijTextile::fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
+                         QString &c2, QString &c1 )
 {
   QString fnid;
   QRegExp rx( "fn(\\d+)" );
@@ -465,8 +477,8 @@ void fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
 
   if( rx.indexIn( tag ) != -1 ) {
     tag = "p";
-    fnid = (fn.at( rx.cap( 1 ) ).isEmpty()) ?
-      rx.cap( 1 ) : fn.at( rx.cap( 1 ) );
+    fnid = (fn.value( rx.cap( 1 ) ).isEmpty()) ?
+      rx.cap( 1 ) : fn.value( rx.cap( 1 ) );
     atts += QString( " id=\"%1\"" ).arg( fnid );
     if( !atts.contains( "class=" ) )
       atts += " class=\"footnote\"";
@@ -490,7 +502,7 @@ void fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
       o2 = QString( "<code%1>" ).arg( atts );
       c2 = "</code>";
       c1 = "</pre>";
-      ctt = shelve( encode_html( ctt.remove( QRegExp( "\\n*$" ) ).append( "\n" ) ) );
+      ctt = shelve( encodeHtml( ctt.remove( QRegExp( "\\n*$" ) ).append( "\n" ) ) );
     }
     else {
       if( tag == "notextile" ) {
@@ -502,7 +514,7 @@ void fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
       }
       else {
         if( tag == "pre" ) {
-          ctt = shelve( encode_html( ctt.remove( QRegExp( "\\n*$" ) ).append( "\n" ) ) );
+          ctt = shelve( encodeHtml( ctt.remove( QRegExp( "\\n*$" ) ).append( "\n" ) ) );
           o1 = QString( "<pre%1>" ).arg( atts );
           o2 = "";
           c2 = "";
@@ -516,10 +528,10 @@ void fBlock( QStringList &in, QString &o1, QString &o2, QString &content,
     }
   }
 
-  content = graf( ctt );
+  content = graff( ctt );
 }
 
-QString QijTextile::graf( QString &in )
+QString QijTextile::graff( QString in )
 {
   QString text( in );
 
@@ -562,12 +574,14 @@ QString QijTextile::span( QString &in )
                          "(?:$|([\\]}])|(?=[[:punct:]]{1,2}|\\s))" )
     .arg( pnct ).arg( c );
   QRegExp rx1;
+  QStringList caps;
   
   Q_FOREACH( QString qtag, qtags ) {
     rxs = rxs_base;
     rx1 = QRegExp( rxs.replace( "$f", qtag ) );
     i = rx1.indexIn( out );
-    out.replace( rx1, fSpan( rx1.capturedTexts() ) );
+    caps = rx1.capturedTexts();
+    out.replace( rx1, fSpan( caps ) );
   }
   
   return out;
@@ -600,6 +614,56 @@ QString QijTextile::fSpan( QStringList &in )
     .arg( tag ).arg( atts ).arg( content ).arg( end );
   return out;
 }
+
+QString QijTextile::links( QString in )
+{
+  QRegExp rx( QString( "(?:^|(?<=[\\s>.$pnct\\(])|([{[]))" // $pre
+            "\""                            // start
+            "(' . %1 . ')"           // $atts
+            "([^\"]+)"                // $text
+            "\\s?"
+            "(?:\\(([^)]+)\\)(?=\"))?"        // $title
+            "\":"
+            "('.$this->urlch.'+)"          // $url
+            "(\\/)?"                       // $slash
+            "([^\\w\\/;]*)"                // $post
+            "(?:([\\]}])|(?=\\s|$|\\)))" ).arg( c ).arg( urlch ) );
+  rx.setMinimal( true );
+  rx.indexIn( in );
+  
+  //  $pre, $atts, $text, $title, $url, $slash, $post)
+
+  QString pre   = rx.cap( 1 );
+  QString atts  = rx.cap( 2 );
+  QString text  = rx.cap( 3 );
+  QString title = rx.cap( 4 );
+  QString url   = rx.cap( 5 );
+  QString slash = rx.cap( 6 );
+  QString post  = rx.cap( 7 );
+
+  url = checkRefs( url );
+
+  atts = parseBlockAttributes( atts );
+  if( !title.isEmpty() ) 
+    atts += QString( " title=\"%1\"" ).arg( encodeHtml( title ) );
+
+  text = glyphs( span( text ) );
+  url = relURL( url );
+  QString urlSlash( url );
+  url += slash;
+
+  QString out = shelve( QString( "<a href=\"%1\" %2%3>%4</a>%5" )
+                        .arg( encodeHtml( urlSlash ) )
+                        .arg( atts )
+                        .arg( rel )
+                        .arg( text )
+                        .arg( post ) );
+  
+  in.replace( rx.cap( 0 ), out );
+  return in;
+}
+  
+  
                                  
 QString QijTextile::getRefs( QString &in )
 {
@@ -636,7 +700,7 @@ QString QijTextile::relURL( QString &u )
   return out;
 }
 
-QString QijTexile::image( QString &in )
+QString QijTextile::image( QString &in )
 {
   QRegExp rx( QString( "(?:[[{])?"            // pre
                        "\\!"                  // opening !
@@ -653,9 +717,10 @@ QString QijTexile::image( QString &in )
   rx.setMinimal( true );
   
   QString out( in );
-  if( rx.indexIn( out ) != -1 )
-    out.replace( rx, fImage( rx.capturedTexts() ) );
-
+  if( rx.indexIn( out ) != -1 ) {
+    QStringList caps = rx.capturedTexts();
+    out.replace( rx, fImage( caps ) );
+  }
   return out;
 }
 
@@ -681,9 +746,9 @@ QString QijTextile::fImage( QStringList &in )
   url = relURL( checkRefs( url ) );
   
   QStringList out;
-  out << href.isEmpty() ? "" : QString( "<a href=\"%1\">" ).arg( href )
-      << QString( "<img src=\"%1\" %2 />" ).arg( url ).arg( atts )
-      << href.isEmpty() ? "" : "</a>";
+  out << (href.isEmpty() ? "" : QString( "<a href=\"%1\">" ).arg( href ));
+  out << QString( "<img src=\"%1\" %2 />" ).arg( url ).arg( atts );
+  out << (href.isEmpty() ? "" : "</a>");
   return out.join( "" );
 }
 
@@ -697,9 +762,9 @@ QString QijTextile::code( QString &in )
   return out;
 }
 
-QString QijTextile::incomingEntities( QString &in )
+QString QijTextile::incomingEntities( QString in )
 {
-  return in.replace( QRegExp( "&(?![#a-zA-Z0-9]+;)" ) );
+  return in.replace( QRegExp( "&(?![#a-zA-Z0-9]+;)" ), "x%x%" );
 }
 
 QString QijTextile::fixEntities( QString &in )
@@ -713,36 +778,35 @@ QString QijTextile::fixEntities( QString &in )
   return out;
 }
 
-QString QijTextile::footnoteRef( QString &in )
+QString QijTextile::footnoteRef( QString in )
 {
   QString out( in );
   QRegExp rx( "\\b\\[([0-9]+)\\](\\s)?" );
 
-  indexIn( rx, in );
+  rx.indexIn( out );
   QStringList matches( rx.capturedTexts() );
 
   if( fn.value( matches[1] ).isEmpty() )
-    fn[matches[1]] = QUUid::createUuid().toString();
+    fn[matches[1]] = QUuid::createUuid().toString();
   QString fnid( fn[matches[1]] );
   QString fnText( matches.value( 2 ).isEmpty() ? "" : matches.value( 2 ) );
-  QString out( in );
   out.replace( matches[0],
                QString( "<sup class=\"footnote\"><a href=\"#fn%1\">%2</a></sup>%3" )
                .arg( fnid ).arg( matches[2] ).arg( fnText ) );
   return out;
 }
 
-QString QijTextile::glyphs( QString &in )
+QString QijTextile::glyphs( QString ourString )
 {
-  QString ourString( in );
+  QStringList glyphReplace;
   QStringList out;
-  int j;
+  //int j;
   QString pnc = "[[:punct:]]";
 
   ourString.replace( QRegExp( "\"\\z" ), "\" " );
   
   QList<QString> glyphSearchStrings;
-  glyphReplace << "(\\w)'(\\w)\"                           //  apostrophe's
+  glyphSearchStrings << "(\\w)'(\\w)"                          //  apostrophe's
     << "(\\s)'(\\d+\\w?)\\b(?!')"                          //  back in '88
     << "(\\S)'(?=\\s|'.$pnc.'|<|$)/"                       //  single closing
     << "'"                                                 //  single opening
@@ -760,37 +824,35 @@ QString QijTextile::glyphs( QString &in )
 
   QList<QRegExp> glyphSearch;
   Q_FOREACH( QString s, glyphSearchStrings ) {
-    glyphReplace << s.endsWith( "/i" ) ?
+    glyphSearch << (s.endsWith( "/i" ) ?
       QRegExp( s.section( 1, s.length()-3 ), Qt::CaseInsensitive ) :
-      QString image( QString & );
-      QRegExp( s );
+      QRegExp( s ));
   }
 
-  QList<QString> glyphReplace;
-  glyphReplace << QString( "$1%1$2" ).arg( glyphs[txt_apostrophe] )
-    << QString( "$1%1$2" ).arg( glyphs[txt_apostrophe] )
-    << QString( "$1%1" ).arg( glyphs[txt_quote_single_quote] )
-    << glyphs[txt_quote_single_open]
-    << QString( "$1%1" ).arg( glyphs[txt_quote_double_open] )
-    << glyphs[txt_quote_double_open]
+  glyphReplace << QString( "$1%1$2" ).arg( glyph["txt_apostrophe"] )
+    << QString( "$1%1$2" ).arg( glyph["txt_apostrophe"] )
+    << QString( "$1%1" ).arg( glyph["txt_quote_single_quote"] )
+    << glyph["txt_quote_single_open"]
+    << QString( "$1%1" ).arg( glyph["txt_quote_double_open"] )
+    << glyph["txt_quote_double_open"]
     << "<acronym title=\"$2\">$1</acronym>"
     << "<span class=\"caps\">$1</span"
-    << QString( "$1%1" ).arg( glyphs[txt_ellipsis] )
-    << QString( "$1%1$2" ).arg( glyphs[txt_emdash] )
-    << QString( " %1 " ).arg( glyphs[txt_endash] )
-    << QString( "$1$2%1$3" ).arg( glyphs[txt_dimension] )
-    << glyphs[txt_trademark]
-    << glyphs[txt_registered]
-    << glyphs[txt_copyright];
+    << QString( "$1%1" ).arg( glyph["txt_ellipsis"] )
+    << QString( "$1%1$2" ).arg( glyph["txt_emdash"] )
+    << QString( " %1 " ).arg( glyph["txt_endash"] )
+    << QString( "$1$2%1$3" ).arg( glyph["txt_dimension"] )
+    << glyph["txt_trademark"]
+    << glyph["txt_registered"]
+    << glyph["txt_copyright"];
 
 
   QRegExp rx1( "(<.*?>)" );
-  rx.setMinimal( true );
+  rx1.setMinimal( true );
   QRegExp rx2( "<.*>" );
 
   QStringList lines = ourString.split( rx1 );
   QStringList::iterator iter;
-  for( iter = lines.begin(); lines != lines.end(); ++line ) {
+  for( iter = lines.begin(); iter != lines.end(); ++iter ) {
     if( rx2.indexIn( *iter ) != -1 ) {
       for( int i = 0; i < glyphSearch.count(); ++i ) {
         if( glyphSearch[i].indexIn( *iter ) != -1 ) {
@@ -807,7 +869,7 @@ QString QijTextile::glyphs( QString &in )
   return out.join( "" );
 }
 
-QString QijTextile::fCode( QStringList &in )
+QString QijTextile::fCode( QStringList in )
 {
   return QString( "%1<code>%2</code>%3" )
     .arg( in[1] )
@@ -815,7 +877,7 @@ QString QijTextile::fCode( QStringList &in )
     .arg( in[3] );
 }
 
-QString QijTextile::fPre( QStringList &in )
+QString QijTextile::fPre( QStringList in )
 {
   return QString( "%1<pre>%2</pre>%3" )
     .arg( in[1] )
@@ -823,7 +885,7 @@ QString QijTextile::fPre( QStringList &in )
     .arg( in[3] );
 }
 
-QString QijTextile::shelve( QString &val )
+QString QijTextile::shelve( QString val )
 {
   QString uuid = QUuid::createUuid().toString();
   shelf[uuid] = val;
@@ -839,7 +901,7 @@ QString QijTextile::retrieve( QString &in )
   do {
     old = out;
     for( iter = shelf.begin(); iter != shelf.end(); ++iter ) {
-      out.replace( iter->key(), iter->value() );
+      out.replace( iter.key(), iter.value() );
     }
   } while( old != out );
 
@@ -858,11 +920,11 @@ QString QijTextile::cleanWhiteSpace( QString &in )
   return out;
 }
 
-QString QijTextile::doSpecial( QString &text, QString &start,
-                               QString &end, Method meth )
+QString QijTextile::doSpecial( QString &text, QString start,
+                               QString end, Method meth )
 {
   QString out( text );
-  QRegExp rx( QString( "(^|\\s|[[({>])%1(.*?)(\s|$|[\])}])?" )
+  QRegExp rx( QString( "(^|\\s|[[({>])%1(.*?)(\\s|$|[\\])}])?" )
               .arg( QRegExp::escape( start ) )
               .arg( QRegExp::escape( end ) ) );
 
@@ -870,14 +932,14 @@ QString QijTextile::doSpecial( QString &text, QString &start,
   switch( meth ) {
     case Textile: out.replace( rx.cap( 0 ), fTextile( rx.capturedTexts() ) ); break;
     case Code:    out.replace( rx.cap( 0 ), fCode( rx.capturedTexts() ) );    break;
-    case Pre:     out.replace( rx.cap( 0 ), fPre( rx.capturedtexts() ) );     break;
-    case Special: out.replace( rx.cap( 0 ), fSpecial( rx.capturedtexts() ) ); break;
+    case Pre:     out.replace( rx.cap( 0 ), fPre( rx.capturedTexts() ) );     break;
+    case Special: out.replace( rx.cap( 0 ), fSpecial( rx.capturedTexts() ) ); break;
   }
   
   return out;
 }
 
-QString QijTextile::fSpecial( QStringList &in )
+QString QijTextile::fSpecial( QStringList in )
 {
   return QString( "%1%2%3" )
     .arg( in[1] )
@@ -887,11 +949,11 @@ QString QijTextile::fSpecial( QStringList &in )
 
 QString QijTextile::noTextile( QString &in )
 {
-  QString out( doSpecial( in, "<textile>", "</notextile>", Textile ) );
-  return doSpecial( out, "==", "==", Textile );
+  QString out( doSpecial( in, QString( "<textile>" ), QString( "</notextile>" ), Textile ) );
+  return doSpecial( out, QString( "==" ), QString( "==" ), Textile );
 }
 
-QString QijTextile::fTextile( QStringList &in )
+QString QijTextile::fTextile( QStringList in )
 {
   return QString( "%1%2%3" )
     .arg( in[1] )
@@ -913,7 +975,7 @@ QString QijTextile::encodeHtml( QString &in, bool quotes )
 
   QString rv( in );
   Q_FOREACH( QChar ch, symbols.keys() )
-    rv.replace( ch, symbol[ch] );
+    rv.replace( ch, symbols[ch] );
   return rv;
 }
 
@@ -924,7 +986,7 @@ QString QijTextile::blockLite( QString &in )
   return block( QString( "%1\n\n" ).arg( in ) );
 }
 
-QString QijTextile::iAlign( QString &in )
+QString QijTextile::iAlign( QString in )
 {
   QMap<QString, QString> vals;
 
@@ -936,7 +998,7 @@ QString QijTextile::iAlign( QString &in )
     vals[in] : "";
 }
 
-QString QijTextile::hAlign( QString &in )
+QString QijTextile::hAlign( QString in )
 {
   QMap<QString, QString> vals;
 
@@ -949,7 +1011,7 @@ QString QijTextile::hAlign( QString &in )
             vals[in] : "" );
 }
 
-QString QijTextile::vAlign( QString &in )
+QString QijTextile::vAlign( QString in )
 {
   QMap<QString, QString> vals;
 
