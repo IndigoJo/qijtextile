@@ -83,11 +83,14 @@ QString QijTextile::convert( bool encode )
       outText = cleanWhiteSpace( outText );
     
     getRefs( outText );
+    qDebug() << "done getRefs";
     
     if( !lite )
       outText = block( outText );
+    qDebug() << "done block";
 
     outText = retrieve( outText );
+    qDebug() << "done retrieve";
     
     outText.replace( QRegExp( "<br />(?!\\n)" ), "<br />\\n" );
 
@@ -98,6 +101,7 @@ QString QijTextile::convert( bool encode )
 QString QijTextile::textileThis( QString &text, QString _rel )
 {
   QijTextile t( text, _rel );
+  qDebug() << t.convert();
   return t.convert();
 }
 
@@ -398,7 +402,9 @@ QString QijTextile::block( QString in )
     params.clear();
     anon = 0;
 
+    qDebug() << "now testing regexp";
     if( rx.indexIn( *i ) != -1 ) {
+      qDebug() << "tested the regexp (true)";
       if( !ext.isEmpty() )
         out[out.count()-1] += c1;
 
@@ -420,11 +426,14 @@ QString QijTextile::block( QString in )
           .arg( o1 ).arg( o2 ).arg( content ).arg( c2 );
     }
     else {
+      qDebug() << "tested the regexp (false)";
       anon = 1; // Anonymous block
       
       if( !ext.isEmpty() || !i->startsWith( ' ' ) ) {
         params << QString() << tag << atts << ext << cite << *i;
+        qDebug() << "Loaded the params";
         fBlock( params, o1, o2, content, c2, c1 );
+        qDebug() << "done fBlock";
         if( rx.cap( 1 ) == "p" && !hasRawText( content ) )
           *i = content;
         else
@@ -542,6 +551,7 @@ QString QijTextile::graff( QString in )
   }
 
   text = links( text );
+  qDebug() << "done links test";
   if( noImage )
     text = image( text );
   
@@ -577,6 +587,7 @@ QString QijTextile::span( QString &in )
   QStringList caps;
   
   Q_FOREACH( QString qtag, qtags ) {
+    qDebug() << "starting loop";
     rxs = rxs_base;
     rx1 = QRegExp( rxs.replace( "$f", qtag ) );
     i = rx1.indexIn( out );
@@ -584,6 +595,7 @@ QString QijTextile::span( QString &in )
     out.replace( rx1, fSpan( caps ) );
   }
   
+  qDebug() << "done span";
   return out;
 }
 
@@ -601,11 +613,12 @@ QString QijTextile::fSpan( QStringList &in )
   qtags["~"] = "sub";
   qtags["^"] = "sup";
 
-  QString tag = qtags.value( in[1] );
-  QString atts = parseBlockAttributes( in[2] );
-  QString cite = in[3];
-  QString content = in[4];
-  QString end = in[5];
+  QString tag = qtags.value( in.value( 1 ) );
+  QString atts = parseBlockAttributes( in.value( 2 ) );
+  QString cite = in.value( 3 );
+  QString content = in.value( 4 );
+  QString end = in.value( 5 );
+  qDebug() << "assigned strings";
 
   if( !cite.isEmpty() )
     atts.append( QString( "cite=\"%1\"" ).arg( cite ) );
@@ -617,17 +630,18 @@ QString QijTextile::fSpan( QStringList &in )
 
 QString QijTextile::links( QString in )
 {
-  QRegExp rx( QString( "(?:^|(?<=[\\s>.$pnct\\(])|([{[]))" // $pre
+  QRegExp rx( QString( "(?:^|(?<=[\\s>.%1\\(])|([{[]))" // $pre
             "\""                            // start
-            "(' . %1 . ')"           // $atts
+            "(%2)"           // $atts
             "([^\"]+)"                // $text
             "\\s?"
             "(?:\\(([^)]+)\\)(?=\"))?"        // $title
             "\":"
-            "('.$this->urlch.'+)"          // $url
+            "(%3+)"          // $url
             "(\\/)?"                       // $slash
             "([^\\w\\/;]*)"                // $post
-            "(?:([\\]}])|(?=\\s|$|\\)))" ).arg( c ).arg( urlch ) );
+            "(?:([\\]}])|(?=\\s|$|\\)))" )
+              .arg( pnct ).arg( c ).arg( urlch ) );
   rx.setMinimal( true );
   rx.indexIn( in );
   
@@ -648,6 +662,7 @@ QString QijTextile::links( QString in )
     atts += QString( " title=\"%1\"" ).arg( encodeHtml( title ) );
 
   text = glyphs( span( text ) );
+  qDebug() << "done glyphs";
   url = relURL( url );
   QString urlSlash( url );
   url += slash;
