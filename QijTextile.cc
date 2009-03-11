@@ -747,9 +747,9 @@ QString QijTextile::image( QString &in )
 
 QString QijTextile::fImage( QStringList &in )
 {
-  QString algn = in[1];
-  QString atts = parseBlockAttributes( in[2] );
-  QString url = in[3];
+  QString algn = in.value( 1 );
+  QString atts = parseBlockAttributes( in.value( 2 ) );
+  QString url = in.value( 3 );
 
   if( !algn.isEmpty() )
     atts.append( QString( " align=\"%1\"" ).arg( iAlign( algn ) ) );
